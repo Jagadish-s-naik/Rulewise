@@ -32,9 +32,15 @@ class ComplianceMetrics {
 
   /// Get status color
   String get statusColor {
-    if (complianceScore >= 90) return 'green';
-    if (complianceScore >= 70) return 'blue';
-    if (complianceScore >= 50) return 'orange';
+    if (complianceScore >= 90) {
+      return 'green';
+    }
+    if (complianceScore >= 70) {
+      return 'blue';
+    }
+    if (complianceScore >= 50) {
+      return 'orange';
+    }
     return 'red';
   }
 
