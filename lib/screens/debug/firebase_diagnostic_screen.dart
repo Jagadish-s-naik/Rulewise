@@ -223,17 +223,18 @@ class _FirebaseDiagnosticScreenState extends State<FirebaseDiagnosticScreen> {
                 child: const Text('🧪 Test: Set BusinessShield Tier'),
               ),
               const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () async {
-                  // Force reload subscription
-                  await context.read<SubscriptionService>().init();
-                  await _loadFirestoreData();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('🔄 Reloaded subscription')),
-                  );
-                },
-                child: const Text('🔄 Reload Subscription'),
-              ),
+               ElevatedButton(
+                 onPressed: () async {
+                   // Force reload subscription
+                   await context.read<SubscriptionService>().init();
+                   await _loadFirestoreData();
+                   if (!mounted) return;
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(content: Text('🔄 Reloaded subscription')),
+                   );
+                 },
+                 child: const Text('🔄 Reload Subscription'),
+               ),
             ],
           ),
 
