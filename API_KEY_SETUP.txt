@@ -1,0 +1,44 @@
+# 🔑 Quick API Key Setup
+
+## Step 1: Get Your Gemini API Key
+
+1. Visit: **https://makersuite.google.com/app/apikey**
+2. Sign in with your Google account
+3. Click **"Create API Key"**
+4. Copy the key (starts with `AIza...`)
+
+## Step 2: Add to Your App
+
+1. Open: `c:\xampp\htdocs\RuleWise\lib\services\ai_service.dart`
+
+2. Find line 7:
+```dart
+static const String _hardcodedApiKey = 'YOUR_GEMINI_API_KEY_HERE';
+```
+
+3. Replace with your actual key:
+```dart
+static const String _hardcodedApiKey = 'AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+```
+
+4. Save the file
+
+## Step 3: Restart the App
+
+In your terminal, press **`R`** (capital R) to hot restart.
+
+## Step 4: Test It!
+
+1. Click "Ask AI Assistant" button
+2. Ask: "How do I get a trade license?"
+3. AI should respond with personalized guidance!
+
+---
+
+**That's it!** The AI Assistant is now fully functional and context-aware.
+
+It knows:
+- Your business type
+- Your location
+- All 107+ applicable licenses
+- Government fees and requirements

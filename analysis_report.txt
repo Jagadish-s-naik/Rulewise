@@ -1,0 +1,79 @@
+﻿Analyzing RuleWise...                                           
+
+   info - Don't use 'BuildContext's across async gaps - lib\screens\ai\ai_assistant_screen.dart:47:35 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\ai\ai_assistant_screen.dart:219:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\ai\ai_assistant_screen.dart:222:28 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\ai\ai_assistant_screen.dart:240:39 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\ai\ai_assistant_screen.dart:295:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\ai\ai_assistant_screen.dart:297:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\ai\ai_assistant_screen.dart:298:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\otp_verification_screen.dart:148:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\phone_login_screen.dart:94:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\auth\phone_login_screen.dart:105:15 - prefer_const_constructors
+warning - The value of the local variable 'authService' isn't used - lib\screens\dashboard\dashboard_screen.dart:51:13 - unused_local_variable
+   info - Unnecessary use of 'toList' in a spread - lib\screens\dashboard\dashboard_screen.dart:388:12 - unnecessary_to_list_in_spreads
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\widgets\compliance_score_card.dart:25:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\widgets\compliance_score_card.dart:49:39 - deprecated_member_use
+   info - Unnecessary use of string interpolation - lib\screens\dashboard\widgets\compliance_score_card.dart:70:17 - unnecessary_string_interpolations
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\widgets\compliance_score_card.dart:100:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\widgets\compliance_score_card.dart:150:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\widgets\compliance_score_card.dart:163:26 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\widgets\license_status_card.dart:135:27 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\license\add_license_screen.dart:184:34 - use_build_context_synchronously
+   info - Unnecessary use of 'toList' in a spread - lib\screens\license\document_preparation_guide.dart:45:16 - unnecessary_to_list_in_spreads
+   info - Don't use 'BuildContext's across async gaps - lib\screens\license\edit_license_screen.dart:135:34 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\screens\license\license_application_wizard.dart:179:18 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\license\license_application_wizard.dart:181:23 - prefer_const_literals_to_create_immutables
+   info - Unnecessary use of 'toList' in a spread - lib\screens\license\license_application_wizard.dart:220:12 - unnecessary_to_list_in_spreads
+   info - Use 'const' with the constructor to improve performance - lib\screens\license\license_application_wizard.dart:331:18 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\screens\license\license_application_wizard.dart:333:23 - prefer_const_literals_to_create_immutables
+warning - Unused import: '../../widgets/legal_widgets.dart' - lib\screens\license\license_details_screen.dart:7:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\license\license_details_screen.dart:326:27 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\profile\aadhaar_validation_screen.dart:38:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\profile\aadhaar_validation_screen.dart:48:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\profile\pan_validation_screen.dart:37:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\profile\pan_validation_screen.dart:47:30 - use_build_context_synchronously
+   info - Unnecessary use of 'toList' in a spread - lib\screens\profile\profile_completion_wizard.dart:116:22 - unnecessary_to_list_in_spreads
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\profile\profile_setup_screen.dart:121:17 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\profile\profile_setup_screen.dart:145:17 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\profile\profile_setup_screen.dart:223:17 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:10:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:11:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:18:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:23:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:24:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:28:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:29:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:30:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:31:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:32:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:33:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:34:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:37:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:38:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:39:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:40:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:41:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\seed_database.dart:42:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\update_license_urls.dart:184:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\scripts\update_license_urls.dart:186:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:8:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:18:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:24:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:30:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:48:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:54:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:55:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:57:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:64:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:73:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\firestore_seeding_service.dart:75:7 - avoid_print
+   info - Use 'const' with the constructor to improve performance - lib\services\notification_service.dart:111:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\services\notification_service.dart:112:18 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\services\profile_service.dart:59:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\services\profile_service.dart:61:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\services\profile_service.dart:63:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\services\profile_service.dart:65:7 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\legal_widgets.dart:23:30 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\legal_widgets.dart:25:48 - deprecated_member_use
+

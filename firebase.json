@@ -1,0 +1,19 @@
+{
+    "firestore": {
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
+    },
+    "flutter": {
+        "platforms": {
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "rulewise-4ec59",
+                    "configurations": {
+                        "web": "1:638906676810:web:2c6904c21b87dc14e558b3",
+                        "windows": "1:638906676810:web:fd91746b1b2795c8e558b3"
+                    }
+                }
+            }
+        }
+    }
+}
