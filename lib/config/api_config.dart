@@ -52,11 +52,21 @@ class ApiConfig {
   // Get list of enabled APIs
   static List<String> get enabledApis {
     final List<String> enabled = [];
-    if (enableApiSetu) enabled.add('API Setu');
-    if (enableOpenGovIndia) enabled.add('Open Government India');
-    if (enableMutualFund) enabled.add('Mutual Fund');
-    if (enableTaxData) enabled.add('Tax Data');
-    if (enableVatValidation) enabled.add('VAT Validation');
+    if (enableApiSetu) {
+      enabled.add('API Setu');
+    }
+    if (enableOpenGovIndia) {
+      enabled.add('Open Government India');
+    }
+    if (enableMutualFund) {
+      enabled.add('Mutual Fund');
+    }
+    if (enableTaxData) {
+      enabled.add('Tax Data');
+    }
+    if (enableVatValidation) {
+      enabled.add('VAT Validation');
+    }
     return enabled;
   }
 }
