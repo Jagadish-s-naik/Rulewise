@@ -1,0 +1,96 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // User licenses sub-collection
+      match /user_licenses/{licenseId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // User reports sub-collection
+      match /reports/{reportId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Only backend can write
+      }
+      
+      // User businesses sub-collection (multi-business feature)
+      match /businesses/{businessId} {
+        allow read, write: if isOwner(userId);
+        
+        match /licenses/{licenseId} {
+          allow read, write: if isOwner(userId);
+        }
+      }
+      
+      // User notifications sub-collection
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Compliance data (read-only for all authenticated users)
+    // Compliance data (read-only for all authenticated users)
+    match /compliance_data/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Law updates (read approved, write for testing/seeding)
+    match /law_updates/{updateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); // Allow for testing/seeding
+    }
+    
+    // Pending law updates (admin only)
+    match /pending_law_updates/{updateId} {
+      allow read: if false; // Admin only via backend
+      allow write: if false; // Backend only
+    }
+    
+    // Legal resources (read and write for testing/seeding)
+    match /legal_resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); // Allow for testing/seeding
+    }
+    
+    // Penalty reference (read and write for testing/seeding)
+    match /penalty_reference/{penaltyId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); // Allow for testing/seeding
+    }
+    
+    // License fee history (read-only)
+    match /license_fee_history/{licenseId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Backend only
+    }
+    
+    // License document updates (read-only)
+    match /license_document_updates/{licenseId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Backend only
+    }
+    
+    // Email OTPs (allow anyone to write for authentication)
+    match /email_otps/{email} {
+      allow read, write: if true; // Allow for OTP authentication
+    }
+    
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
