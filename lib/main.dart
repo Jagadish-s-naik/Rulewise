@@ -19,6 +19,9 @@ import 'package:rulewise/screens/splash_screen.dart';
 import 'package:rulewise/theme/app_theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:rulewise/l10n/app_localizations.dart';
+import 'package:rulewise/services/locale_provider.dart';
 
 // Top-level function for handling background messages
 @pragma('vm:entry-point')
@@ -112,18 +115,31 @@ class RuleWiseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserLicenseService()),
         ChangeNotifierProvider(create: (_) => SubscriptionService()..init()),
         ChangeNotifierProvider(create: (_) => LawChangeRadarService()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ProxyProvider<SubscriptionService, PaymentService>(
           update: (_, subscriptionService, __) =>
               PaymentService(subscriptionService),
         ),
       ],
-      child: MaterialApp(
-        title: 'RuleWise',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.light,
-        home: const SplashScreen(),
+      child: Consumer<LocaleProvider>(
+        builder: (context, localeProvider, child) {
+          return MaterialApp(
+            title: 'RuleWise',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.light,
+            locale: localeProvider.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const SplashScreen(),
+          );
+        },
       ),
     );
   }

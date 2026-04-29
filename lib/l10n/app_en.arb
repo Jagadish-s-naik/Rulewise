@@ -1,0 +1,13 @@
+{
+  "@@locale": "en",
+  "appTitle": "RuleWise",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "dashboardTitle": "Dashboard",
+  "aiAssistantTitle": "AI Assistant",
+  "profileTitle": "Profile",
+  "settingsTitle": "Settings",
+  "languageSettings": "Language",
+  "selectLanguage": "Select Language"
+}

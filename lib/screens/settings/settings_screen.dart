@@ -6,6 +6,10 @@ import '../../models/subscription_plan.dart';
 import '../subscription/subscription_upgrade_screen.dart';
 import '../legal/terms_screen.dart';
 import '../legal/privacy_screen.dart';
+import 'language_settings_screen.dart';
+import 'feedback_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/biometric_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -19,6 +23,33 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          // Preferences Section
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Preferences',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.language),
+            title: const Text('Language'),
+            subtitle: const Text('Change app language'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const LanguageSettingsScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
+
           // Notifications Section
           const Padding(
             padding: EdgeInsets.all(16),
@@ -212,6 +243,7 @@ class SettingsScreen extends StatelessWidget {
               // Navigate to profile
             },
           ),
+          const _BiometricToggleTile(),
 
           const Divider(),
 
@@ -271,10 +303,82 @@ class SettingsScreen extends StatelessWidget {
             title: Text('Version'),
             subtitle: Text('1.0.0'),
           ),
+          ListTile(
+            leading: const Icon(Icons.feedback),
+            title: const Text('Send Feedback'),
+            subtitle: const Text('Report bugs or request features'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const FeedbackScreen(),
+                ),
+              );
+            },
+          ),
 
           const Divider(),
         ],
       ),
+    );
+  }
+}
+
+class _BiometricToggleTile extends StatefulWidget {
+  const _BiometricToggleTile();
+
+  @override
+  State<_BiometricToggleTile> createState() => _BiometricToggleTileState();
+}
+
+class _BiometricToggleTileState extends State<_BiometricToggleTile> {
+  bool _useBiometric = false;
+  bool _isAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometric();
+  }
+
+  Future<void> _checkBiometric() async {
+    final service = BiometricService();
+    final available = await service.isBiometricAvailable();
+    if (available) {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _isAvailable = true;
+        _useBiometric = prefs.getBool('use_biometric') ?? false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isAvailable) return const SizedBox.shrink();
+
+    return SwitchListTile(
+      secondary: const Icon(Icons.fingerprint),
+      title: const Text('Biometric Login'),
+      subtitle: const Text('Use Face ID / Touch ID to unlock app'),
+      value: _useBiometric,
+      activeThumbColor: Colors.blue,
+      onChanged: (value) async {
+        if (value) {
+          final service = BiometricService();
+          final authenticated = await service.authenticate(
+            reason: 'Authenticate to enable biometric login',
+          );
+          if (!authenticated) return;
+        }
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('use_biometric', value);
+        setState(() {
+          _useBiometric = value;
+        });
+      },
     );
   }
 }
