@@ -151,19 +151,56 @@ class ReportGenerationService {
   }
 
   pw.Widget _buildHeader(String businessName, String city, String state) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(
-          'Monthly Compliance Health Report',
-          style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-        ),
-        pw.SizedBox(height: 10),
-        pw.Text('Business: $businessName'),
-        pw.Text('Location: $city, $state'),
-        pw.Text('Generated: ${DateTime.now().toString().substring(0, 10)}'),
-        pw.Divider(thickness: 2),
-      ],
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(20),
+      decoration: pw.BoxDecoration(
+        color: PdfColor.fromHex('#1565C0'),
+        borderRadius: pw.BorderRadius.circular(8),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'RuleWise Compliance Report',
+                style: pw.TextStyle(
+                  fontSize: 24, 
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Text(
+                'Business: $businessName',
+                style: const pw.TextStyle(color: PdfColors.white, fontSize: 14),
+              ),
+              pw.Text(
+                'Location: $city, $state',
+                style: const pw.TextStyle(color: PdfColors.white, fontSize: 12),
+              ),
+            ],
+          ),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                'Date Generated',
+                style: const pw.TextStyle(color: PdfColors.white, fontSize: 10),
+              ),
+              pw.Text(
+                DateTime.now().toString().substring(0, 10),
+                style: pw.TextStyle(
+                  color: PdfColors.white, 
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -171,43 +208,81 @@ class ReportGenerationService {
     ComplianceMetrics metrics,
     RiskProfile riskProfile,
   ) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(
-          'Executive Summary',
-          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-        ),
-        pw.SizedBox(height: 10),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text('Overall Compliance Score:'),
-            pw.Text(
-              '${riskProfile.overallScore.round()}%',
-              style: pw.TextStyle(
-                fontSize: 20,
-                fontWeight: pw.FontWeight.bold,
-                color: _getPdfColor(riskProfile.level),
+    final score = riskProfile.overallScore;
+    
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(16),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.grey300),
+        borderRadius: pw.BorderRadius.circular(8),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Executive Summary',
+            style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 15),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text('Overall Compliance Score:', style: const pw.TextStyle(fontSize: 14)),
+              pw.Text(
+                '${score.round()}%',
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                  color: _getPdfColor(riskProfile.level),
+                ),
               ),
-            ),
-          ],
-        ),
-        pw.SizedBox(height: 5),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text('Risk Level:'),
-            pw.Text(
-              _getRiskLabel(riskProfile.level),
-              style: pw.TextStyle(
-                fontWeight: pw.FontWeight.bold,
-                color: _getPdfColor(riskProfile.level),
+            ],
+          ),
+          pw.SizedBox(height: 10),
+          // Visual Compliance Bar
+          pw.Stack(
+            children: [
+              pw.Container(
+                height: 15,
+                width: double.infinity,
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey300,
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+              pw.Container(
+                height: 15,
+                width: 400 * (score / 100), // Approximate width mapping
+                decoration: pw.BoxDecoration(
+                  color: _getPdfColor(riskProfile.level),
+                  borderRadius: pw.BorderRadius.circular(8),
+                ),
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 15),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text('Risk Level:', style: const pw.TextStyle(fontSize: 14)),
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: pw.BoxDecoration(
+                  color: _getPdfColor(riskProfile.level).flatten().withAlpha(0.2),
+                  borderRadius: pw.BorderRadius.circular(12),
+                ),
+                child: pw.Text(
+                  _getRiskLabel(riskProfile.level),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: _getPdfColor(riskProfile.level),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
