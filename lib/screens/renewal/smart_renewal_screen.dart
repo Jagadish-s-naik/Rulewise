@@ -159,12 +159,12 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
       );
     }
 
-    final activeItems = _renewalData.values
-        .where((i) => i.userLicense.status != 'projected')
-        .toList();
-    final projectedItems = _renewalData.values
-        .where((i) => i.userLicense.status == 'projected')
-        .toList();
+     final activeItems = _renewalData.values
+         .where((i) => i.userLicense.licenseNumber != 'NOT_ACQUIRED')
+         .toList();
+     final projectedItems = _renewalData.values
+         .where((i) => i.userLicense.licenseNumber == 'NOT_ACQUIRED')
+         .toList();
 
     return ListView(
       padding: const EdgeInsets.all(16),

@@ -292,61 +292,53 @@ class AuthService extends ChangeNotifier {
         throw Exception('Invalid code. Please try again.');
       }
 
-      // OTP is valid, create/sign in user
-      UserCredential userCredential;
-      final password = _generatePasswordFromEmail(email);
+       // OTP is valid, create/sign in user
+       UserCredential userCredential;
+       final password = _generatePasswordFromEmail(email);
 
-      try {
-        // Check if user exists
-        final signInMethods = await _auth!.fetchSignInMethodsForEmail(email);
+       try {
+         // Try to sign in first (existing user)
+         try {
+           userCredential = await _auth!.signInWithEmailAndPassword(
+             email: email,
+             password: password,
+           );
+           debugPrint('✅ Sign-in successful - user created via OTP');
+         } on FirebaseAuthException catch (signInError) {
+           if (signInError.code == 'user-not-found') {
+             // New user - create account with OTP
+             debugPrint('➕ New user, creating account with OTP...');
+             userCredential = await _auth!.createUserWithEmailAndPassword(
+               email: email,
+               password: password,
+             );
 
-        if (signInMethods.isNotEmpty) {
-          debugPrint('✅ User exists with email: $email');
+             // Create user profile
+             await _firestore!
+                 .collection('users')
+                 .doc(userCredential.user!.uid)
+                 .set({
+               'email': email,
+               'created_at': FieldValue.serverTimestamp(),
+               'profile_completed': false,
+               'subscription_tier': 'free',
+               'auth_method': 'email_otp',
+             });
+             debugPrint('✅ New account created via OTP');
+           } else if (signInError.code == 'wrong-password' ||
+               signInError.code == 'invalid-credential') {
+             debugPrint('⚠️ This email was registered with a password');
+             debugPrint(
+                 '💡 User should use "Login with Email & Password" instead');
 
-          // Try to sign in with our generated password
-          try {
-            userCredential = await _auth!.signInWithEmailAndPassword(
-              email: email,
-              password: password,
-            );
-            debugPrint('✅ Sign-in successful - user created via OTP');
-          } catch (signInError) {
-            // Password mismatch - user was created with password login
-            if (signInError.toString().contains('invalid-credential') ||
-                signInError.toString().contains('wrong-password')) {
-              debugPrint('⚠️ This email was registered with a password');
-              debugPrint(
-                  '💡 User should use "Login with Email & Password" instead');
-
-              throw Exception(
-                  'This email is already registered with a password.\n\n'
-                  'Please use "Login with Email & Password" option instead.\n\n'
-                  'If you forgot your password, use the "Forgot Password" link.');
-            } else {
-              rethrow;
-            }
-          }
-        } else {
-          // New user - create account with OTP
-          debugPrint('➕ New user, creating account with OTP...');
-          userCredential = await _auth!.createUserWithEmailAndPassword(
-            email: email,
-            password: password,
-          );
-
-          // Create user profile
-          await _firestore!
-              .collection('users')
-              .doc(userCredential.user!.uid)
-              .set({
-            'email': email,
-            'created_at': FieldValue.serverTimestamp(),
-            'profile_completed': false,
-            'subscription_tier': 'free',
-            'auth_method': 'email_otp',
-          });
-          debugPrint('✅ New account created via OTP');
-        }
+             throw Exception(
+                 'This email is already registered with a password.\n\n'
+                 'Please use "Login with Email & Password" option instead.\n\n'
+                 'If you forgot your password, use the "Forgot Password" link.');
+           } else {
+             rethrow;
+           }
+         }
       } catch (authError) {
         debugPrint('❌ Auth error: $authError');
         rethrow;

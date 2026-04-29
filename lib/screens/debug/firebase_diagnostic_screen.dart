@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/auth_service.dart';
-import '../services/subscription_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/subscription_service.dart';
 
 /// Diagnostic screen to check Firebase and subscription status
 /// Add this to your app to debug subscription issues
@@ -152,89 +152,100 @@ class _FirebaseDiagnosticScreenState extends State<FirebaseDiagnosticScreen> {
           _buildSection(
             'Test Actions',
             [
-              ElevatedButton(
-                onPressed: () async {
-                  try {
-                    final userId = FirebaseAuth.instance.currentUser?.uid;
-                    if (userId == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('❌ No user logged in')),
-                      );
-                      return;
+               ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final userId = FirebaseAuth.instance.currentUser?.uid;
+                      if (userId == null) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('❌ No user logged in')),
+                        );
+                        return;
+                      }
+
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
+                          .update({
+                        'subscription_tier': 'protection',
+                        'is_premium': true,
+                        'subscription_updated_at': FieldValue.serverTimestamp(),
+                      });
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('✅ Manually set tier to Protection')),
+                        );
+                      }
+
+                      await _loadFirestoreData();
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('❌ Error: $e')),
+                        );
+                      }
                     }
-
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(userId)
-                        .update({
-                      'subscription_tier': 'protection',
-                      'is_premium': true,
-                      'subscription_updated_at': FieldValue.serverTimestamp(),
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('✅ Manually set tier to Protection')),
-                    );
-
-                    await _loadFirestoreData();
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('❌ Error: $e')),
-                    );
-                  }
-                },
-                child: const Text('🧪 Test: Set Protection Tier'),
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () async {
-                  try {
-                    final userId = FirebaseAuth.instance.currentUser?.uid;
-                    if (userId == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('❌ No user logged in')),
-                      );
-                      return;
-                    }
-
-                    await FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(userId)
-                        .update({
-                      'subscription_tier': 'businessShield',
-                      'is_premium': true,
-                      'subscription_updated_at': FieldValue.serverTimestamp(),
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content:
-                              Text('✅ Manually set tier to BusinessShield')),
-                    );
-
-                    await _loadFirestoreData();
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('❌ Error: $e')),
-                    );
-                  }
-                },
-                child: const Text('🧪 Test: Set BusinessShield Tier'),
-              ),
+                  },
+                 child: const Text('🧪 Test: Set Protection Tier'),
+               ),
               const SizedBox(height: 8),
                ElevatedButton(
-                 onPressed: () async {
-                   // Force reload subscription
-                   await context.read<SubscriptionService>().init();
-                   await _loadFirestoreData();
-                   if (!mounted) return;
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(content: Text('🔄 Reloaded subscription')),
-                   );
-                 },
-                 child: const Text('🔄 Reload Subscription'),
+                  onPressed: () async {
+                    try {
+                      final userId = FirebaseAuth.instance.currentUser?.uid;
+                      if (userId == null) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('❌ No user logged in')),
+                        );
+                        return;
+                      }
+
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
+                          .update({
+                        'subscription_tier': 'businessShield',
+                        'is_premium': true,
+                        'subscription_updated_at': FieldValue.serverTimestamp(),
+                      });
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('✅ Manually set tier to BusinessShield')),
+                        );
+                      }
+
+                      await _loadFirestoreData();
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('❌ Error: $e')),
+                        );
+                      }
+                    }
+                  },
+                 child: const Text('🧪 Test: Set BusinessShield Tier'),
                ),
+              const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Force reload subscription
+                    await context.read<SubscriptionService>().init();
+                    await _loadFirestoreData();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('🔄 Reloaded subscription')),
+                      );
+                    }
+                  },
+                  child: const Text('🔄 Reload Subscription'),
+                ),
             ],
           ),
 

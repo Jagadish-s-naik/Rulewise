@@ -55,13 +55,13 @@ class _ComplianceScoreWidgetState extends State<ComplianceScoreWidget>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+       boxShadow: [
+         BoxShadow(
+           color: Colors.black.withValues(alpha: 0.06),
+           blurRadius: 12,
+           offset: const Offset(0, 4),
+         ),
+       ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,10 +125,10 @@ class _ComplianceScoreWidgetState extends State<ComplianceScoreWidget>
                   horizontal: 12,
                   vertical: 6,
                 ),
-                decoration: BoxDecoration(
-                  color: trendPercentage >= 0
-                      ? AppTheme.accentGreen.withOpacity(0.1)
-                      : AppTheme.dangerRed.withOpacity(0.1),
+                 decoration: BoxDecoration(
+                   color: trendPercentage >= 0
+                       ? AppTheme.accentGreen.withValues(alpha: 0.1)
+                       : AppTheme.dangerRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Row(
@@ -194,12 +194,12 @@ class _ComplianceScorePainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
 
-    // Background circle
-    final backgroundPaint = Paint()
-      ..color = AppTheme.textSecondary.withOpacity(0.1)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+     // Background circle
+     final backgroundPaint = Paint()
+       ..color = AppTheme.textSecondary.withValues(alpha: 0.1)
+       ..style = PaintingStyle.stroke
+       ..strokeWidth = strokeWidth
+       ..strokeCap = StrokeCap.round;
 
     canvas.drawCircle(center, radius, backgroundPaint);
 
