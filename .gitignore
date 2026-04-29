@@ -37,7 +37,7 @@ migrate_working_dir/
 .env.*.local
 
 # Firebase files (except config)
-**/firebase-adminsdk*.json
+*firebase-adminsdk*.json
 **/serviceAccountKey.json
 .firebase/
 .firebaserc
