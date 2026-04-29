@@ -71,10 +71,12 @@ class ComplianceTimelineScreen extends StatelessWidget {
     final isExpired = license.isExpired;
     final isSoon = license.isExpiringSoon;
 
-    Color statusColor = Colors.green;
-    if (isExpired) {
-      statusColor = Colors.red;
-    } else if (isSoon) statusColor = Colors.orange;
+     Color statusColor = Colors.green;
+     if (isExpired) {
+       statusColor = Colors.red;
+     } else if (isSoon) {
+       statusColor = Colors.orange;
+     }
 
     return IntrinsicHeight(
       child: Row(

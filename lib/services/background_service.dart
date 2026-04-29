@@ -36,15 +36,12 @@ void callbackDispatcher() {
   });
 }
 
-class BackgroundService {
-  static Future<void> initialize() async {
-    await Workmanager().initialize(callbackDispatcher,
-        isInDebugMode:
-            kDebugMode // If enabled, it posts a notification whenever the task runs
-        );
+ class BackgroundService {
+   static Future<void> initialize() async {
+     await Workmanager().initialize(callbackDispatcher);
 
-    // continually runs every 24 hours
-    await Workmanager().registerPeriodicTask(
+     // continually runs every 24 hours
+     await Workmanager().registerPeriodicTask(
       "daily-license-check",
       simplePeriodicTask,
       frequency: const Duration(hours: 24),
