@@ -25,7 +25,14 @@ class ComplianceStatus {
     if (timestamp == null) {
       return null;
     }
-    return (timestamp as Timestamp).toDate();
+    if (timestamp is Timestamp) {
+      return timestamp.toDate();
+    }
+    // Handle string date format (ISO) as fallback
+    if (timestamp is String) {
+      return DateTime.tryParse(timestamp);
+    }
+    return null;
   }
 
   int? get daysToExpiry {

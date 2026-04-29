@@ -152,100 +152,111 @@ class _FirebaseDiagnosticScreenState extends State<FirebaseDiagnosticScreen> {
           _buildSection(
             'Test Actions',
             [
-               ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      final userId = FirebaseAuth.instance.currentUser?.uid;
-                      if (userId == null) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('❌ No user logged in')),
-                        );
-                        return;
-                      }
-
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(userId)
-                          .update({
-                        'subscription_tier': 'protection',
-                        'is_premium': true,
-                        'subscription_updated_at': FieldValue.serverTimestamp(),
-                      });
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('✅ Manually set tier to Protection')),
-                        );
-                      }
-
-                      await _loadFirestoreData();
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('❌ Error: $e')),
-                        );
-                      }
-                    }
-                  },
-                 child: const Text('🧪 Test: Set Protection Tier'),
-               ),
-              const SizedBox(height: 8),
-               ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      final userId = FirebaseAuth.instance.currentUser?.uid;
-                      if (userId == null) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('❌ No user logged in')),
-                        );
-                        return;
-                      }
-
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(userId)
-                          .update({
-                        'subscription_tier': 'businessShield',
-                        'is_premium': true,
-                        'subscription_updated_at': FieldValue.serverTimestamp(),
-                      });
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content:
-                                  Text('✅ Manually set tier to BusinessShield')),
-                        );
-                      }
-
-                      await _loadFirestoreData();
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('❌ Error: $e')),
-                        );
-                      }
-                    }
-                  },
-                 child: const Text('🧪 Test: Set BusinessShield Tier'),
-               ),
-              const SizedBox(height: 8),
                 ElevatedButton(
-                  onPressed: () async {
-                    // Force reload subscription
-                    await context.read<SubscriptionService>().init();
-                    await _loadFirestoreData();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('🔄 Reloaded subscription')),
-                      );
-                    }
-                  },
-                  child: const Text('🔄 Reload Subscription'),
+                   onPressed: () async {
+                     final scaffoldMessenger = ScaffoldMessenger.of(context);
+                     try {
+                       final userId = FirebaseAuth.instance.currentUser?.uid;
+                       if (userId == null) {
+                         if (!mounted) return;
+                         scaffoldMessenger.showSnackBar(
+                           const SnackBar(content: Text('❌ No user logged in')),
+                         );
+                         return;
+                       }
+
+                       await FirebaseFirestore.instance
+                           .collection('users')
+                           .doc(userId)
+                           .update({
+                         'subscription_tier': 'protection',
+                         'is_premium': true,
+                         'subscription_updated_at': FieldValue.serverTimestamp(),
+                       });
+
+                       if (mounted) {
+                         scaffoldMessenger.showSnackBar(
+                           const SnackBar(
+                               content: Text('✅ Manually set tier to Protection')),
+                         );
+                       }
+
+                       await _loadFirestoreData();
+                     } catch (e) {
+                       if (mounted) {
+                         scaffoldMessenger.showSnackBar(
+                           SnackBar(content: Text('❌ Error: $e')),
+                         );
+                       }
+                     }
+                   },
+                  child: const Text('🧪 Test: Set Protection Tier'),
                 ),
+               const SizedBox(height: 8),
+                ElevatedButton(
+                   onPressed: () async {
+                     final scaffoldMessenger = ScaffoldMessenger.of(context);
+                     try {
+                       final userId = FirebaseAuth.instance.currentUser?.uid;
+                       if (userId == null) {
+                         if (!mounted) return;
+                         scaffoldMessenger.showSnackBar(
+                           const SnackBar(content: Text('❌ No user logged in')),
+                         );
+                         return;
+                       }
+
+                       await FirebaseFirestore.instance
+                           .collection('users')
+                           .doc(userId)
+                           .update({
+                         'subscription_tier': 'businessShield',
+                         'is_premium': true,
+                         'subscription_updated_at': FieldValue.serverTimestamp(),
+                       });
+
+                       if (mounted) {
+                         scaffoldMessenger.showSnackBar(
+                           const SnackBar(
+                               content:
+                                   Text('✅ Manually set tier to BusinessShield')),
+                         );
+                       }
+
+                       await _loadFirestoreData();
+                     } catch (e) {
+                       if (mounted) {
+                         scaffoldMessenger.showSnackBar(
+                           SnackBar(content: Text('❌ Error: $e')),
+                         );
+                       }
+                     }
+                   },
+                  child: const Text('🧪 Test: Set BusinessShield Tier'),
+                ),
+              const SizedBox(height: 8),
+                 ElevatedButton(
+                   onPressed: () async {
+                     final scaffoldMessenger = ScaffoldMessenger.of(context);
+                     try {
+                       // Force reload subscription
+                       await context.read<SubscriptionService>().init();
+                       await _loadFirestoreData();
+                       if (mounted) {
+                         scaffoldMessenger.showSnackBar(
+                           const SnackBar(content: Text('🔄 Reloaded subscription')),
+                         );
+                       }
+                     } catch (e) {
+                       if (mounted) {
+                         scaffoldMessenger.showSnackBar(
+                           SnackBar(content: Text('❌ Error: $e')),
+                         );
+                       }
+                     }
+                   },
+                   child: const Text('🔄 Reload Subscription'),
+                 ),
             ],
           ),
 

@@ -43,11 +43,13 @@ class MasterDataSeedingService {
         // Filter relevant licenses from the master list
         final relevantLicenses = indianComplianceData.where((l) {
           // Check Location
-          final states = l['states'] as List;
+          final states = l['states'] as List?;
+          if (states == null) return false;
           bool stateMatch = states.contains('All') || states.contains(state);
 
           // Check Business Type
-          final types = l['business_types'] as List;
+          final types = l['business_types'] as List?;
+          if (types == null) return false;
           bool typeMatch = types.contains('All') || types.contains(type);
 
           return stateMatch && typeMatch;

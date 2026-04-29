@@ -28,8 +28,10 @@ class SubscriptionService extends ChangeNotifier {
   DateTime? _trialEndsAt;
   bool _hasUsedTrial = false;
 
-  // 🧪 testingMode - Set to false for production
-  static const bool testingMode = true; // ✅ ENABLED FOR TESTING
+  // 🧪 NOTE: Set testingMode = true only during development
+  // When true, all premium features are unlocked and no real payments are processed
+  // Set to FALSE before production release
+  static const bool testingMode = false; // ✅ DISABLED FOR PRODUCTION
 
   // 🧪 testing: Override tier for testing (only works when testingMode = true)
   static const SubscriptionTier testingTier = SubscriptionTier.enterprise;
