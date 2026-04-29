@@ -107,11 +107,11 @@ class _StorageDiagnosticScreenState extends State<StorageDiagnosticScreen> {
                 return Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  color: isError
-                      ? Colors.red.withOpacity(0.1)
-                      : isSuccess
-                          ? Colors.green.withOpacity(0.1)
-                          : null,
+                   color: isError
+                       ? Colors.red.withValues(alpha: 0.1)
+                       : isSuccess
+                           ? Colors.green.withValues(alpha: 0.1)
+                           : null,
                   child: Text(
                     log,
                     style: TextStyle(
