@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/biometric_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'auth/unified_login_screen.dart';
-// Unused import removed
 import 'main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -37,13 +38,42 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (!mounted) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              user != null ? const MainScreen() : const UnifiedLoginScreen(),
-        ),
-      );
+      if (user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        final useBiometric = prefs.getBool('use_biometric') ?? false;
+
+        if (useBiometric) {
+          final biometricService = BiometricService();
+          if (await biometricService.isBiometricAvailable()) {
+            final authenticated = await biometricService.authenticate(
+              reason: 'Please authenticate to access RuleWise',
+            );
+            
+            if (!mounted) return;
+            
+            if (!authenticated) {
+              // Failed or canceled biometric, fallback to login or exit
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const UnifiedLoginScreen()),
+              );
+              return;
+            }
+          }
+        }
+        
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+        );
+      } else {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const UnifiedLoginScreen()),
+        );
+      }
       debugPrint('✅ SplashScreen: Navigation complete');
     } catch (e, stackTrace) {
       debugPrint('❌ SplashScreen Error: $e');
