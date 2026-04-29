@@ -2,10 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/subscription_plan.dart';
+import 'remote_config_service.dart';
 
 class SubscriptionService extends ChangeNotifier {
   FirebaseFirestore? _firestore;
   FirebaseAuth? _auth;
+  RemoteConfigService? _remoteConfigService;
 
   SubscriptionService() {
     try {
@@ -38,8 +40,24 @@ class SubscriptionService extends ChangeNotifier {
 
   SubscriptionTier get currentTier => testingMode ? testingTier : _currentTier;
   int get aiQueriesUsedThisWeek => _aiQueriesUsedThisWeek;
-  int get aiQueriesRemaining =>
-      currentTier.aiQueriesPerWeek - _aiQueriesUsedThisWeek;
+
+  int get currentQueryLimit {
+    switch (currentTier) {
+      case SubscriptionTier.free:
+        return _remoteConfigService?.freeTierQueryLimit ?? currentTier.aiQueriesPerWeek;
+      case SubscriptionTier.protection:
+        return _remoteConfigService?.basicTierQueryLimit ?? currentTier.aiQueriesPerWeek;
+      default:
+        return currentTier.aiQueriesPerWeek;
+    }
+  }
+
+  int get aiQueriesRemaining => currentQueryLimit - _aiQueriesUsedThisWeek;
+
+  void updateRemoteConfig(RemoteConfigService? config) {
+    _remoteConfigService = config;
+    notifyListeners();
+  }
 
   bool get isTrialActive => testingMode ? true : _isTrialActive;
   bool get hasUsedTrial => _hasUsedTrial;

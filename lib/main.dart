@@ -22,6 +22,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rulewise/l10n/app_localizations.dart';
 import 'package:rulewise/services/locale_provider.dart';
+import 'package:rulewise/services/remote_config_service.dart';
 
 // Top-level function for handling background messages
 @pragma('vm:entry-point')
@@ -31,6 +32,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 void main() async {
+  RemoteConfigService? remoteConfigService;
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -57,6 +59,13 @@ void main() async {
       // Continue anyway - app handles offline mode
     }
 
+    // Initialize Remote Config
+    try {
+      remoteConfigService = await RemoteConfigService.init();
+    } catch (e) {
+      debugPrint('Warning: Remote Config init failed: $e');
+    }
+
     // Initialize timezone data for notifications
     tz.initializeTimeZones();
 
@@ -75,12 +84,13 @@ void main() async {
 
     // Initialize Background Services (Fire-and-forget to prevent app freeze)
     _initializeBackgroundServices();
+
   } catch (e) {
     debugPrint('Critical Initialization Error: $e');
   }
 
   // ALWAYS run the app, even if some services fail
-  runApp(const RuleWiseApp());
+  runApp(RuleWiseApp(remoteConfigService: remoteConfigService));
 }
 
 Future<void> _initializeBackgroundServices() async {
@@ -101,19 +111,26 @@ Future<void> _initializeBackgroundServices() async {
 }
 
 class RuleWiseApp extends StatelessWidget {
-  const RuleWiseApp({super.key});
+  final RemoteConfigService? remoteConfigService;
+  
+  const RuleWiseApp({super.key, this.remoteConfigService});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<RemoteConfigService?>.value(value: remoteConfigService),
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => ComplianceService()),
         ChangeNotifierProvider(create: (_) => ValidationService()),
         ChangeNotifierProvider(create: (_) => ProfileService()),
         ChangeNotifierProvider(create: (_) => NotificationService()),
         ChangeNotifierProvider(create: (_) => UserLicenseService()),
-        ChangeNotifierProvider(create: (_) => SubscriptionService()..init()),
+        ChangeNotifierProxyProvider<RemoteConfigService?, SubscriptionService>(
+          create: (_) => SubscriptionService()..init(),
+          update: (_, remoteConfig, subscriptionService) =>
+              subscriptionService!..updateRemoteConfig(remoteConfig),
+        ),
         ChangeNotifierProvider(create: (_) => LawChangeRadarService()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ProxyProvider<SubscriptionService, PaymentService>(
