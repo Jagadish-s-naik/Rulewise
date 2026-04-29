@@ -117,34 +117,17 @@ CRITICAL VIOLATION:
 
     return FineCalculation(
       fineAmount: penaltyAmount.toDouble(),
-      legalConsequence: consequence,
-      riskProbability: riskProbability,
-      recommendation: isWithinGrace
-          ? 'Renew within grace period to avoid penalty'
-          : 'URGENT: Renew immediately to minimize penalties',
-      daysExpired: daysExpired,
-      gracePeriodExpired: !isWithinGrace,
-    );
-  }
+       legalConsequence: consequence,
+       riskProbability: riskProbability,
+       recommendation: isWithinGrace
+           ? 'Renew within grace period to avoid penalty'
+           : 'URGENT: Renew immediately to minimize penalties',
+       daysExpired: daysExpired,
+       gracePeriodExpired: !isWithinGrace,
+     );
+   }
 
-  /// Get city-specific fine multiplier
-  double _getCityMultiplier(String city) {
-    // Metropolitan cities have higher fines
-    switch (city.toLowerCase()) {
-      case 'mumbai':
-      case 'delhi':
-      case 'bengaluru':
-        return 1.5;
-      case 'pune':
-      case 'hyderabad':
-      case 'chennai':
-        return 1.3;
-      default:
-        return 1.0;
-    }
-  }
-
-  /// Simulate fine for multiple missing licenses
+   /// Simulate fine for multiple missing licenses
   MultiLicenseFineCalculation calculateMultipleFines({
     required List<LicenseModel> applicableLicenses,
     required List<UserLicenseModel> userLicenses,
