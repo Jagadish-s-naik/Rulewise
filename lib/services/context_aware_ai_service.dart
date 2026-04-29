@@ -61,7 +61,13 @@ class ContextAwareAIService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final answer = data['choices'][0]['message']['content'] as String;
+        final choices = data['choices'] as List?;
+        if (choices == null || choices.isEmpty) {
+          return 'Sorry, I could not process your request. Please try again.';
+        }
+        final message = choices[0]?['message'] as Map<String, dynamic>?;
+        final answer = message?['content']?.toString() ??
+            'Sorry, I could not generate a response.';
         return answer;
       } else {
         debugPrint('AI API error: ${response.statusCode} - ${response.body}');

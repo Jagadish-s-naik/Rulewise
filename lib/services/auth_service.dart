@@ -1,3 +1,4 @@
+import 'dart:async'; // For StreamSubscription
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -6,6 +7,7 @@ import 'email_service.dart';
 class AuthService extends ChangeNotifier {
   FirebaseAuth? _auth;
   FirebaseFirestore? _firestore;
+  StreamSubscription<User?>? _authStateSubscription;
 
   User? _user;
   bool _isLoading = false;
@@ -25,13 +27,19 @@ class AuthService extends ChangeNotifier {
       _auth = FirebaseAuth.instance;
       _firestore = FirebaseFirestore.instance;
 
-      _auth?.authStateChanges().listen((User? user) {
+      _authStateSubscription = _auth?.authStateChanges().listen((User? user) {
         _user = user;
         notifyListeners();
       });
     } catch (e) {
       debugPrint('AuthService: Firebase not initialized or not available: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription?.cancel();
+    super.dispose();
   }
 
   // Sign Up
@@ -278,8 +286,12 @@ class AuthService extends ChangeNotifier {
       }
 
       final data = doc.data()!;
-      final storedOTP = data['otp'] as String;
-      final expiresAt = (data['expires_at'] as Timestamp).toDate();
+      final storedOTP = (data['otp'] as String?) ?? '';
+      final expiresAtTimestamp = data['expires_at'];
+      if (expiresAtTimestamp is! Timestamp) {
+        throw Exception('Invalid OTP expiry data');
+      }
+      final expiresAt = expiresAtTimestamp.toDate();
 
       // Check if OTP is expired
       if (DateTime.now().isAfter(expiresAt)) {

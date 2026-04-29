@@ -32,7 +32,11 @@ class FirestoreSeedingService {
                 '    📋 Seeding $businessType (${licenses.length} licenses)...');
 
             for (var licenseData in licenses) {
-              final licenseId = licenseData['id'] as String;
+              final licenseId = licenseData['id']?.toString() ?? '';
+              if (licenseId.isEmpty) {
+                debugPrint('⚠️ Skipping license with empty ID');
+                continue;
+              }
 
               await _firestore
                   .collection('compliance_data')

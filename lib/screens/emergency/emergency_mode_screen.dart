@@ -169,7 +169,7 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
   }
 
   Widget _buildLegalRightsCard() {
-    final rights = _legalRights!['rights'] as List;
+    final rights = (_legalRights!['rights'] as List?)?.cast<dynamic>() ?? [];
 
     return Card(
       child: Padding(
@@ -311,7 +311,7 @@ class _EmergencyModeScreenState extends State<EmergencyModeScreen> {
   }
 
   Widget _buildChecklistCard() {
-    final categories = _checklist!['categories'] as List? ?? [];
+    final categories = (_checklist!['categories'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     return Card(
       child: Padding(
