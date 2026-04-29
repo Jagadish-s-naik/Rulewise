@@ -44,11 +44,8 @@ class _AllLicensesScreenState extends State<AllLicensesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Use watch to rebuild when data changes
-    final complianceService = context.watch<ComplianceService>();
-    final licenses = complianceService.applicableLicenses;
-
-    final filteredLicenses = _getFilteredLicenses(licenses);
+    // Use watch to rebuild when data changes via getter
+    final filteredLicenses = _getFilteredLicenses(_licenses);
 
     return Scaffold(
       appBar: AppBar(

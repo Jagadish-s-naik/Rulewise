@@ -22,16 +22,13 @@ class SmartRenewalService extends ChangeNotifier {
     required UserLicenseModel userLicense,
     required String city,
   }) async {
-    // Fetch live fee from government portal
-    final liveFee = await _portalService.verifyLicenseFee(
-      licenseType: license.id.split('_').last,
-      city: city,
-    );
+     // Fetch live fee from government portal
+     final liveFee = await _portalService.verifyLicenseFee(
+       licenseType: license.id.split('_').last,
+       city: city,
+     );
 
-    // Get historical fee from Firestore
-    final historicalFee = await _getHistoricalFee(license.id);
-
-    // Check for fee changes
+     // Check for fee changes
     final feeChanged = liveFee != null && liveFee != license.fee;
     final feeIncrease = feeChanged ? liveFee - license.fee : 0;
 
@@ -68,27 +65,6 @@ class SmartRenewalService extends ChangeNotifier {
         optimalDate: optimalDate,
       ),
     );
-  }
-
-  /// Get historical fee from Firestore
-  Future<int> _getHistoricalFee(String licenseId) async {
-    try {
-      final doc = await _firestore
-          .collection('license_fee_history')
-          .doc(licenseId)
-          .get();
-
-      if (doc.exists) {
-        final history = doc.data()!['history'] as List;
-        if (history.isNotEmpty) {
-          return history.last['fee'] as int;
-        }
-      }
-    } catch (e) {
-      debugPrint('Error fetching historical fee: $e');
-    }
-
-    return 0;
   }
 
   /// Check for document requirement updates

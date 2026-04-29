@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/auth_service.dart';
-import '../services/subscription_service.dart';
+import '../../services/auth_service.dart';
+import '../../services/subscription_service.dart';
 
 /// Diagnostic screen to check Firebase and subscription status
 /// Add this to your app to debug subscription issues
