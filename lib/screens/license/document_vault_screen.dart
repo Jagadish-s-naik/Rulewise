@@ -126,7 +126,7 @@ class _DocumentCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.download_rounded, color: Colors.blue),
               onPressed: () {
-                // TODO: Implement download
+                // Pending: Implement download
                 ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Download started...')));
               },

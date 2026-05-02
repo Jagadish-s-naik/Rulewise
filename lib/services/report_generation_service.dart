@@ -209,6 +209,8 @@ class ReportGenerationService {
     RiskProfile riskProfile,
   ) {
     final score = riskProfile.overallScore;
+    final riskColor = _getPdfColor(riskProfile.level);
+    final lightRiskColor = PdfColor(riskColor.red, riskColor.green, riskColor.blue, 0.2);
     
     return pw.Container(
       padding: const pw.EdgeInsets.all(16),
@@ -233,7 +235,7 @@ class ReportGenerationService {
                 style: pw.TextStyle(
                   fontSize: 24,
                   fontWeight: pw.FontWeight.bold,
-                  color: _getPdfColor(riskProfile.level),
+                  color: riskColor,
                 ),
               ),
             ],
@@ -254,7 +256,7 @@ class ReportGenerationService {
                 height: 15,
                 width: 400 * (score / 100), // Approximate width mapping
                 decoration: pw.BoxDecoration(
-                  color: _getPdfColor(riskProfile.level),
+                  color: riskColor,
                   borderRadius: pw.BorderRadius.circular(8),
                 ),
               ),
@@ -268,14 +270,14 @@ class ReportGenerationService {
               pw.Container(
                 padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: pw.BoxDecoration(
-                  color: _getPdfColor(riskProfile.level).flatten().withAlpha(0.2),
+                  color: lightRiskColor,
                   borderRadius: pw.BorderRadius.circular(12),
                 ),
                 child: pw.Text(
                   _getRiskLabel(riskProfile.level),
                   style: pw.TextStyle(
                     fontWeight: pw.FontWeight.bold,
-                    color: _getPdfColor(riskProfile.level),
+                    color: riskColor,
                   ),
                 ),
               ),

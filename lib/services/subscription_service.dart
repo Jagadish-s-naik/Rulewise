@@ -234,11 +234,11 @@ class SubscriptionService extends ChangeNotifier {
       }
 
       // 3. Update User Profile in Firebase
-      await _firestore!.collection('users').doc(userId).update({
+      await _firestore!.collection('users').doc(userId).set({
         'subscription_tier': newTier.toString().split('.').last,
         'subscription_updated_at': FieldValue.serverTimestamp(),
         'is_premium': true,
-      });
+      }, SetOptions(merge: true));
       debugPrint(
         '✅ Firebase updated with tier: ${newTier.toString().split('.').last}',
       );

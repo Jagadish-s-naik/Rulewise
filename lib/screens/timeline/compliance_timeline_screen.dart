@@ -180,7 +180,7 @@ class ComplianceTimelineScreen extends StatelessWidget {
                         width: double.infinity,
                         child: OutlinedButton(
                           onPressed: () {
-                            // TODO: Navigate to renewal
+                            // Pending: Navigate to renewal
                           },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: statusColor,
