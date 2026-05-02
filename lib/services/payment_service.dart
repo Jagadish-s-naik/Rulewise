@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:rulewise/services/subscription_service.dart';
@@ -15,6 +16,7 @@ class PaymentService {
   // Temp storage for pending transaction
   String? _pendingPlanName;
   double? _pendingAmount;
+  Completer<bool>? _paymentCompleter;
 
   PaymentService(this._subscriptionService) {
     _razorpay = Razorpay();
@@ -27,12 +29,14 @@ class PaymentService {
     _razorpay.clear();
   }
 
-  Future<void> openCheckout({
+  Future<bool> openCheckout({
     required double amount,
     required String planName,
     required String userEmail,
     required String userPhone,
   }) async {
+    _paymentCompleter = Completer<bool>();
+    
     _pendingPlanName = planName;
     _pendingAmount = amount;
 
@@ -42,7 +46,7 @@ class PaymentService {
         const Duration(seconds: 2),
       ); // Simulate network delay
       // Manual success trigger
-      _handlePaymentSuccess(
+      await _handlePaymentSuccess(
         PaymentSuccessResponse(
           'mock_payment_id',
           'mock_order_id',
@@ -50,7 +54,7 @@ class PaymentService {
           null,
         ),
       );
-      return;
+      return _paymentCompleter?.future ?? Future.value(true);
     }
 
     final options = {
@@ -70,10 +74,13 @@ class PaymentService {
       _razorpay.open(options);
     } catch (e) {
       debugPrint('Error: $e');
+      _paymentCompleter?.complete(false);
     }
+
+    return _paymentCompleter?.future ?? Future.value(false);
   }
 
-  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+  Future<bool> _handlePaymentSuccess(PaymentSuccessResponse response) async {
     debugPrint('✅ Payment Success: ${response.paymentId}');
 
     // Here we would verify the signature on backend.
@@ -81,7 +88,8 @@ class PaymentService {
 
     if (_pendingPlanName == null) {
       debugPrint('❌ Error: No pending plan found during success callback');
-      return;
+      _paymentCompleter?.complete(false);
+      return false;
     }
 
     debugPrint('🔄 Calling upgradeToPremium for: $_pendingPlanName');
@@ -94,20 +102,29 @@ class PaymentService {
       );
 
       debugPrint('✅ upgradeToPremium completed successfully');
+      _paymentCompleter?.complete(true);
+      return true;
     } catch (e) {
       debugPrint('❌ Error in upgradeToPremium: $e');
+      _paymentCompleter?.complete(false);
+      return false;
+    } finally {
+      // Clear pending state
+      _pendingPlanName = null;
+      _pendingAmount = null;
+      _paymentCompleter = null;
     }
-
-    // Clear pending state
-    _pendingPlanName = null;
-    _pendingAmount = null;
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
     debugPrint('Payment Error: ${response.code} - ${response.message}');
+    _paymentCompleter?.complete(false);
+    _paymentCompleter = null;
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
     debugPrint('External Wallet: ${response.walletName}');
+    _paymentCompleter?.complete(false);
+    _paymentCompleter = null;
   }
 }

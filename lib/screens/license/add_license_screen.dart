@@ -93,7 +93,7 @@ class _AddLicenseScreenState extends State<AddLicenseScreen> {
             issuingAuthority: _authorityController.text.trim(),
             issueDate: _issueDate!,
             expiryDate: _expiryDate!,
-            // content: TODO upload
+            // content: Pending upload
           );
 
       if (mounted) {

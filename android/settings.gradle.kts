@@ -1,3 +1,5 @@
+rootProject.name = "rulewise_android"
+
 pluginManagement {
     val flutterSdkPath =
         run {

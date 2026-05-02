@@ -43,21 +43,20 @@ class _SubscriptionUpgradeScreenState extends State<SubscriptionUpgradeScreen> {
 
       if (amount > 0) {
         // Trigger Payment Flow
-        await context.read<PaymentService>().openCheckout(
+        final isSuccess = await context.read<PaymentService>().openCheckout(
               amount: amount,
               planName: tier.name,
               userEmail: userEmail,
               userPhone: userPhone,
             );
 
-        // Wait for mock payment to complete
-        await Future.delayed(const Duration(seconds: 3));
+        if (!mounted) return;
 
-        if (mounted) {
+        if (isSuccess) {
           // Check if upgrade was successful
           final newTier = context.read<SubscriptionService>().currentTier;
 
-          if (newTier == tier) {
+          if (newTier == tier || newTier == SubscriptionTier.businessShield || newTier == SubscriptionTier.enterprise || newTier == SubscriptionTier.protection) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('✅ Successfully upgraded to ${tier.name}!'),
@@ -67,13 +66,20 @@ class _SubscriptionUpgradeScreenState extends State<SubscriptionUpgradeScreen> {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('⏳ Payment processing...'),
+                content: Text('⏳ Payment processing... Please refresh later.'),
                 backgroundColor: Colors.orange,
               ),
             );
           }
 
           Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Payment failed or cancelled.'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       }
     } catch (e) {

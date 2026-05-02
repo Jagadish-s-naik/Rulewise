@@ -117,7 +117,7 @@ class NotificationService extends ChangeNotifier {
       debugPrint(
           '📅 Scheduled reminder for ${license.licenseName} in ${delay.inDays} days');
 
-      // TODO: Implement actual notification scheduling with flutter_local_notifications
+      // Pending: Implement actual notification scheduling with flutter_local_notifications
       // This requires proper timezone initialization which should be done in main.dart
     } catch (e) {
       debugPrint('Error scheduling renewal reminder: $e');
