@@ -134,8 +134,10 @@ class RuleWiseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LawChangeRadarService()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ProxyProvider<SubscriptionService, PaymentService>(
-          update: (_, subscriptionService, __) =>
-              PaymentService(subscriptionService),
+          create: (ctx) => PaymentService(ctx.read<SubscriptionService>()),
+          update: (_, subscriptionService, previous) =>
+              previous ?? PaymentService(subscriptionService),
+          dispose: (_, service) => service.dispose(),
         ),
       ],
       child: Consumer<LocaleProvider>(
@@ -145,7 +147,7 @@ class RuleWiseApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.light,
+            themeMode: ThemeMode.system,
             locale: localeProvider.locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,

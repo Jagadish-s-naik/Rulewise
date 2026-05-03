@@ -5,9 +5,11 @@ import '../../services/profile_service.dart';
 import '../../services/compliance_service.dart';
 import '../../services/user_license_service.dart';
 import '../../services/subscription_service.dart';
+import '../../services/auth_service.dart';
 import '../../models/subscription_plan.dart';
 import '../subscription/premium_promo_screen.dart'; // Added
-import 'package:url_launcher/url_launcher.dart';
+import 'package:rulewise/utils/url_helper.dart';
+
 import 'package:open_file/open_file.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -58,8 +60,11 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
         throw Exception('Profile not found');
       }
 
+      final authService = context.read<AuthService>();
+      final userId = authService.currentUser?.uid ?? 'unknown_user';
+
       final reportResult = await _reportService.generateMonthlyReport(
-        userId: 'user_id', // Get from auth
+        userId: userId,
         userName: profile.businessName,
         businessName: profile.businessName,
         city: profile.city,
@@ -136,11 +141,7 @@ class _MonthlyReportsScreenState extends State<MonthlyReportsScreen> {
 
   Future<void> _openCloudReport() async {
     if (_lastReportFirebaseUrl == null) return;
-
-    final uri = Uri.parse(_lastReportFirebaseUrl!);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
+    await openUrl(_lastReportFirebaseUrl!);
   }
 
   Future<void> _shareReport() async {

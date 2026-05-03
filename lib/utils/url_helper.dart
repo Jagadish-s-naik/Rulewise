@@ -1,12 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Helper function to open URLs with automatic https:// prefix
 Future<bool> openUrl(String url) async {
   try {
+    if (url.trim().isEmpty) {
+      debugPrint('⚠️ openUrl: Empty URL provided');
+      return false;
+    }
+
+    // Trim and clean the URL
+    String formattedUrl = url.trim();
+    
     // Add https:// if URL doesn't have a scheme
-    String formattedUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      formattedUrl = 'https://$url';
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://$formattedUrl';
     }
 
     final uri = Uri.parse(formattedUrl);
@@ -16,6 +24,7 @@ Future<bool> openUrl(String url) async {
     }
     return false;
   } catch (e) {
+    debugPrint('❌ openUrl Error: $e');
     return false;
   }
 }

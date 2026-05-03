@@ -6,7 +6,8 @@ import '../../services/compliance_service.dart';
 import '../../services/subscription_service.dart';
 import '../../models/subscription_plan.dart';
 import '../subscription/subscription_upgrade_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import '../../utils/url_helper.dart';
 
 class GrowthAdvisorScreen extends StatefulWidget {
   const GrowthAdvisorScreen({super.key});
@@ -413,12 +414,7 @@ class _GrowthAdvisorScreenState extends State<GrowthAdvisorScreen> {
                 ),
                 const Spacer(),
                 TextButton.icon(
-                  onPressed: () async {
-                    final uri = Uri.parse(opportunity.actionUrl);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri);
-                    }
-                  },
+                  onPressed: () => openUrl(opportunity.actionUrl),
                   icon: const Icon(Icons.open_in_new, size: 16),
                   label: const Text('Learn More'),
                 ),

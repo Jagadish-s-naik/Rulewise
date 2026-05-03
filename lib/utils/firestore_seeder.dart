@@ -65,7 +65,7 @@ class _FirestoreSeederScreenState extends State<FirestoreSeederScreen> {
         'states': ['All India'],
         'business_types': ['food_beverage', 'retail_shop'],
         'impact': 'high',
-        'source_url': 'https://www.fssai.gov.in/notifications',
+        'source_url': 'https://www.fssai.gov.in',
       },
       {
         'title': 'GST Rate Changes for Restaurants',
@@ -130,7 +130,7 @@ class _FirestoreSeederScreenState extends State<FirestoreSeederScreen> {
           'manufacturing'
         ],
         'impact': 'medium',
-        'source_url': 'https://tnprofessionaltax.gov.in',
+        'source_url': 'https://www.tnvat.gov.in',
       },
       {
         'title': 'Labour Welfare Fund Increase',
@@ -154,7 +154,7 @@ class _FirestoreSeederScreenState extends State<FirestoreSeederScreen> {
         'states': ['Maharashtra'],
         'business_types': ['retail_shop', 'food_beverage'],
         'impact': 'high',
-        'source_url': 'https://mpcb.gov.in',
+        'source_url': 'https://www.mpcb.gov.in',
       },
       {
         'title': 'Health License Fee Reduced',
@@ -241,7 +241,7 @@ class _FirestoreSeederScreenState extends State<FirestoreSeederScreen> {
         'states': ['All India'],
         'business_types': ['retail_shop', 'food_beverage', 'service_provider'],
         'impact': 'low',
-        'source_url': 'https://digitalindia.gov.in',
+        'source_url': 'https://www.digitalindia.gov.in',
       },
       {
         'title': 'Environmental Clearance Required',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import '../../utils/url_helper.dart';
 import '../../models/license_model.dart';
 import '../../models/user_license_model.dart';
 import '../../services/user_license_service.dart';
@@ -404,29 +405,11 @@ class LicenseDetailsScreen extends StatelessWidget {
   }
 
   Future<void> _openUrl(String url) async {
-    // Add https:// if URL doesn't have a scheme
-    String formattedUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      formattedUrl = 'https://$url';
-    }
-
-    final uri = Uri.parse(formattedUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    await openUrl(url);
   }
 
   Future<void> _openDocument(String url) async {
-    // Add https:// if URL doesn't have a scheme
-    String formattedUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      formattedUrl = 'https://$url';
-    }
-
-    final uri = Uri.parse(formattedUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    await openUrl(url);
   }
 
   Future<void> _confirmDelete(BuildContext context) async {

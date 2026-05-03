@@ -4,13 +4,14 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:rulewise/services/subscription_service.dart';
 
 class PaymentService {
-  late Razorpay _razorpay;
+  Razorpay? _razorpay; // nullable — not initialised on web
   final SubscriptionService _subscriptionService;
 
   // ⚠️ REPLACE WITH YOUR REAL KEY FROM RAZORPAY DASHBOARD
   static const String _keyId = 'rzp_test_PLACEHOLDER';
 
-  // Set to TRUE to bypass real Razorpay SDK while waiting for keys
+  // Set to TRUE to bypass real Razorpay SDK while waiting for keys.
+  // Always forced true on web (plugin not supported).
   static const bool _useMockMode = true;
 
   // Temp storage for pending transaction
@@ -18,15 +19,20 @@ class PaymentService {
   double? _pendingAmount;
   Completer<bool>? _paymentCompleter;
 
-  PaymentService(this._subscriptionService) {
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  PaymentService(this._subscriptionService, {Razorpay? razorpay}) {
+    // Razorpay plugin is not available on web — skip initialisation
+    if (!kIsWeb) {
+      _razorpay = razorpay ?? Razorpay();
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+      _razorpay!.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    }
   }
 
   void dispose() {
-    _razorpay.clear();
+    if (!kIsWeb) {
+      _razorpay?.clear();
+    }
   }
 
   Future<bool> openCheckout({
@@ -36,16 +42,16 @@ class PaymentService {
     required String userPhone,
   }) async {
     _paymentCompleter = Completer<bool>();
-    
     _pendingPlanName = planName;
     _pendingAmount = amount;
 
-    if (_useMockMode) {
+    // Use mock mode on web or when mock flag is set
+    if (kIsWeb || _useMockMode) {
       debugPrint('💰 MOCK PAYMENT MODE: Simulating success for $planName');
-      await Future.delayed(
-        const Duration(seconds: 2),
-      ); // Simulate network delay
-      // Manual success trigger
+      await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
+
+      // Capture the completer before _handlePaymentSuccess nullifies it
+      final completer = _paymentCompleter;
       await _handlePaymentSuccess(
         PaymentSuccessResponse(
           'mock_payment_id',
@@ -54,7 +60,7 @@ class PaymentService {
           null,
         ),
       );
-      return _paymentCompleter?.future ?? Future.value(true);
+      return completer?.future ?? Future.value(true);
     }
 
     final options = {
@@ -71,9 +77,9 @@ class PaymentService {
     };
 
     try {
-      _razorpay.open(options);
+      _razorpay!.open(options);
     } catch (e) {
-      debugPrint('Error: $e');
+      debugPrint('Razorpay Error: $e');
       _paymentCompleter?.complete(false);
     }
 
@@ -83,36 +89,39 @@ class PaymentService {
   Future<bool> _handlePaymentSuccess(PaymentSuccessResponse response) async {
     debugPrint('✅ Payment Success: ${response.paymentId}');
 
-    // Here we would verify the signature on backend.
-    // For MVP/Firebase, we trust the client (RISKY - change for production) or use Cloud Functions to verify.
-
     if (_pendingPlanName == null) {
       debugPrint('❌ Error: No pending plan found during success callback');
       _paymentCompleter?.complete(false);
+      _paymentCompleter = null;
       return false;
     }
 
     debugPrint('🔄 Calling upgradeToPremium for: $_pendingPlanName');
 
+    // Capture references before clearing state
+    final completer = _paymentCompleter;
+    final planName = _pendingPlanName!;
+    final pendingAmount = _pendingAmount ?? 0.0;
+
+    // Clear pending state BEFORE the async call
+    _pendingPlanName = null;
+    _pendingAmount = null;
+    _paymentCompleter = null;
+
     try {
       await _subscriptionService.upgradeToPremium(
         transactionId: response.paymentId ?? 'mock_id',
-        amount: _pendingAmount ?? 0.0,
-        planType: _pendingPlanName!.toLowerCase(),
+        amount: pendingAmount,
+        planType: planName.toLowerCase(),
       );
 
       debugPrint('✅ upgradeToPremium completed successfully');
-      _paymentCompleter?.complete(true);
+      completer?.complete(true);
       return true;
     } catch (e) {
       debugPrint('❌ Error in upgradeToPremium: $e');
-      _paymentCompleter?.complete(false);
+      completer?.complete(false);
       return false;
-    } finally {
-      // Clear pending state
-      _pendingPlanName = null;
-      _pendingAmount = null;
-      _paymentCompleter = null;
     }
   }
 

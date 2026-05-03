@@ -47,6 +47,8 @@ extension SubscriptionTierExtension on SubscriptionTier {
     }
   }
 
+  bool get isPremium => this != SubscriptionTier.free;
+
   bool hasFeature(String feature) {
     switch (this) {
       case SubscriptionTier.free:

@@ -9,10 +9,11 @@ class SubscriptionService extends ChangeNotifier {
   FirebaseAuth? _auth;
   RemoteConfigService? _remoteConfigService;
 
-  SubscriptionService() {
+  SubscriptionService({FirebaseFirestore? firestore, FirebaseAuth? auth, RemoteConfigService? remoteConfigService}) {
     try {
-      _firestore = FirebaseFirestore.instance;
-      _auth = FirebaseAuth.instance;
+      _firestore = firestore ?? FirebaseFirestore.instance;
+      _auth = auth ?? FirebaseAuth.instance;
+      _remoteConfigService = remoteConfigService;
       debugPrint('✅ SubscriptionService: Firebase instances obtained');
       debugPrint(
         '🔐 Current user: ${_auth?.currentUser?.email ?? "NOT LOGGED IN"}',
@@ -199,11 +200,39 @@ class SubscriptionService extends ChangeNotifier {
     required double amount,
     required String planType,
   }) async {
+    // 1. Determine new tier from plan name FIRST
+    SubscriptionTier newTier;
+    final planLower = planType.toLowerCase();
+
+    if (planLower.contains('enterprise')) {
+      newTier = SubscriptionTier.enterprise;
+    } else if (planLower.contains('businessshield') ||
+        planLower.contains('business')) {
+      newTier = SubscriptionTier.businessShield;
+    } else if (planLower.contains('protection')) {
+      newTier = SubscriptionTier.protection;
+    } else {
+      newTier = SubscriptionTier.businessShield;
+    }
+
+    // 2. Update local state IMMEDIATELY so the UI reflects the change right away
+    final oldTier = _currentTier;
+    _currentTier = newTier;
+    debugPrint('🔄 [SubscriptionService] Local tier updated: $oldTier → $newTier');
+    notifyListeners();
+    debugPrint('📢 [SubscriptionService] Listeners notified of immediate upgrade');
+
+    // 3. Persist to Firestore (best-effort — UI is already updated)
     final userId = _auth?.currentUser?.uid;
-    if (userId == null || _firestore == null) return;
+    if (userId == null || _firestore == null) {
+      debugPrint('⚠️ [SubscriptionService] No user/Firestore — local state updated but not persisted');
+      return;
+    }
 
     try {
-      // 1. Record the transaction
+      debugPrint('📡 [SubscriptionService] Persisting upgrade to Firestore...');
+      
+      // Record the transaction
       await _firestore!
           .collection('users')
           .doc(userId)
@@ -217,50 +246,52 @@ class SubscriptionService extends ChangeNotifier {
             'provider': 'razorpay',
           });
 
-      // 2. Determine new tier based on plan name
-      SubscriptionTier newTier;
-      final planLower = planType.toLowerCase();
-
-      if (planLower.contains('enterprise')) {
-        newTier = SubscriptionTier.enterprise;
-      } else if (planLower.contains('businessshield') ||
-          planLower.contains('business')) {
-        newTier = SubscriptionTier.businessShield;
-      } else if (planLower.contains('protection')) {
-        newTier = SubscriptionTier.protection;
-      } else {
-        // Default to businessShield for any premium payment
-        newTier = SubscriptionTier.businessShield;
-      }
-
-      // 3. Update User Profile in Firebase
+      // Update User Profile in Firebase
+      // 1. Update Firestore
       await _firestore!.collection('users').doc(userId).set({
         'subscription_tier': newTier.toString().split('.').last,
         'subscription_updated_at': FieldValue.serverTimestamp(),
         'is_premium': true,
       }, SetOptions(merge: true));
-      debugPrint(
-        '✅ Firebase updated with tier: ${newTier.toString().split('.').last}',
-      );
 
-      // 4. Update local state
-      final oldTier = _currentTier;
+      // 2. FORCE local state update immediately to avoid race conditions
       _currentTier = newTier;
-      debugPrint('🔄 Local tier updated: $oldTier → $newTier');
+      debugPrint('✅ [SubscriptionService] Local state forced to: $newTier');
 
-      // 5. Notify listeners immediately
+      // 3. Notify listeners so UI updates instantly
       notifyListeners();
-      debugPrint('📢 Listeners notified');
+      
+      // 4. Record transaction in separate collection
+      await _firestore!
+          .collection('users')
+          .doc(userId)
+          .collection('transactions')
+          .add({
+        'type': 'upgrade',
+        'tier': newTier.toString().split('.').last,
+        'amount': amount,
+        'transaction_id': transactionId,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
-      // 6. CRITICAL: Reload from Firebase to ensure sync
-      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint('🏁 [SubscriptionService] Upgrade flow complete for $newTier');
+      
+      // Re-fetch to confirm server-side state (optional delay)
+      await Future.delayed(const Duration(milliseconds: 1000));
       await _loadSubscription();
-      debugPrint('🔄 Reloaded subscription from Firebase');
+      
+      // force it back to newTier one last time since we KNOW the payment was successful.
+      if (_currentTier != newTier) {
+        debugPrint('⚠️ [SubscriptionService] Detected stale read after reload. Re-asserting local state.');
+        _currentTier = newTier;
+        notifyListeners();
+      }
 
-      debugPrint('✅ User upgraded to $newTier (from plan: $planType)');
+      debugPrint('✅ [SubscriptionService] User fully upgraded to $newTier');
     } catch (e) {
-      debugPrint('❌ Error processing upgrade: $e');
-      rethrow;
+      debugPrint('❌ [SubscriptionService] Error persisting upgrade: $e');
+      // We don't revert the UI here because the user DID pay. 
+      // We'll let the next app restart or background sync handle it.
     }
   }
 

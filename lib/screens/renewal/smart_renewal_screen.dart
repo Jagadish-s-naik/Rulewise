@@ -197,7 +197,11 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
       UserLicenseModel license, RenewalIntelligence intelligence,
       {bool isProjected = false}) {
     final daysUntilExpiry = license.daysUntilExpiry;
-    final isUrgent = daysUntilExpiry < 30;
+    final isExpired = license.isExpired;
+    final isUrgent = isExpired || license.isExpiringSoon;
+    final statusColor = isExpired 
+        ? AppTheme.dangerRed 
+        : (isUrgent ? AppTheme.warningOrange : AppTheme.primaryBlue);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -224,13 +228,13 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (isProjected ? Colors.blue : Colors.purple)
+                  color: (isProjected ? AppTheme.primaryBlue : (isExpired ? AppTheme.dangerRed : Colors.purple))
                       .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  isProjected ? Icons.add_moderator : Icons.verified_user,
-                  color: isProjected ? Colors.blue : Colors.purple,
+                  isProjected ? Icons.add_moderator : (isExpired ? Icons.warning_rounded : Icons.verified_user),
+                  color: isProjected ? AppTheme.primaryBlue : (isExpired ? AppTheme.dangerRed : Colors.purple),
                   size: 20,
                 ),
               ),
@@ -248,9 +252,9 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
                     ),
                     if (isUrgent && !isProjected)
                       Text(
-                        'Urgent Attention Needed',
+                        isExpired ? 'Action Required Immediately' : 'Urgent Attention Needed',
                         style: TextStyle(
-                          color: Colors.orange[700],
+                          color: statusColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -263,7 +267,7 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
+                    color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
@@ -271,7 +275,7 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: AppTheme.primaryBlue,
                     ),
                   ),
                 ),
@@ -325,9 +329,7 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
                           : '$daysUntilExpiry days left',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: isUrgent && !isProjected
-                            ? Colors.orange
-                            : AppTheme.textPrimary,
+                        color: statusColor,
                       ),
                     ),
                   ],
@@ -390,9 +392,9 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.auto_awesome, // Magic/AI icon
-                  color: AppTheme.primaryBlue,
+                Icon(
+                  isExpired ? Icons.report_problem_rounded : Icons.auto_awesome,
+                  color: statusColor,
                   size: 18,
                 ),
                 const SizedBox(width: 12),
@@ -417,19 +419,23 @@ class _SmartRenewalScreenState extends State<SmartRenewalScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                // Navigate
+                // Navigate to renewal flow
               },
-              style: isProjected
-                  ? ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryBlue)
-                  : OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primaryBlue,
-                      side: const BorderSide(color: AppTheme.primaryBlue),
-                    ), // Use different styles for primary vs secondary actions if possible, but here sticking to Elevated for consistency or maybe Outlined for "Active" ones?
-              // Actually, let's keep it Elevated for "Call to Action".
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isExpired ? AppTheme.dangerRed : AppTheme.primaryBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
               icon: Icon(isProjected ? Icons.add_circle_outline : Icons.refresh,
                   size: 18),
-              label: Text(isProjected ? 'Plan Application' : 'Start Renewal'),
+              label: Text(
+                isProjected ? 'Plan Application' : (isExpired ? 'Renew Immediately' : 'Start Renewal'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
