@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/subscription_service.dart';
 import '../../services/payment_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/subscription_plan.dart';
 import '../../theme/app_theme.dart';
+import 'payment_processing_screen.dart';
 
 class SubscriptionUpgradeScreen extends StatefulWidget {
   const SubscriptionUpgradeScreen({super.key});
@@ -13,86 +15,87 @@ class SubscriptionUpgradeScreen extends StatefulWidget {
   State<SubscriptionUpgradeScreen> createState() =>
       _SubscriptionUpgradeScreenState();
 }
-
 class _SubscriptionUpgradeScreenState extends State<SubscriptionUpgradeScreen> {
-  bool _isLoading = false;
+  bool _isProcessing = false;
 
   Future<void> _upgradeTo(SubscriptionTier tier) async {
-    setState(() => _isLoading = true);
+    if (_isProcessing) return;
+
+    final authService = context.read<AuthService>();
+    final paymentService = context.read<PaymentService>();
+    final userEmail = authService.currentUser?.email ?? 'user@example.com';
+    const userPhone = '9876543210';
+
+    // Map tier to amount
+    double amount = 0;
+    switch (tier) {
+      case SubscriptionTier.protection:
+        amount = 249;
+        break;
+      case SubscriptionTier.businessShield:
+        amount = 399;
+        break;
+      case SubscriptionTier.enterprise:
+        amount = 999;
+        break;
+      default:
+        amount = 0;
+    }
+
+    if (amount <= 0) return;
+
+    setState(() => _isProcessing = true);
+    HapticFeedback.lightImpact();
+    debugPrint('🚀 [Upgrade] Starting flow for tier: ${tier.name}');
+
     try {
-      final authService = context.read<AuthService>();
-      final userEmail = authService.currentUser?.email ?? 'user@example.com';
-      const userPhone =
-          '9876543210'; // In a real app, fetch from ProfileService
+      // Navigate to the payment processing screen — it handles the full flow
+      final result = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (context) => PaymentProcessingScreen(
+            planName: tier.name,
+            amount: amount,
+            onProcess: () async {
+              debugPrint('💳 [Payment] Opening checkout...');
+              return await paymentService.openCheckout(
+                amount: amount,
+                planName: tier.name,
+                userEmail: userEmail,
+                userPhone: userPhone,
+              );
+            },
+          ),
+          fullscreenDialog: true,
+        ),
+      );
 
-      // Map tier to amount
-      double amount = 0;
-      switch (tier) {
-        case SubscriptionTier.protection:
-          amount = 249;
-          break;
-        case SubscriptionTier.businessShield:
-          amount = 399;
-          break;
-        case SubscriptionTier.enterprise:
-          amount = 999;
-          break;
-        default:
-          amount = 0;
-      }
+      debugPrint('🏁 [Upgrade] Result: $result');
 
-      if (amount > 0) {
-        // Trigger Payment Flow
-        final isSuccess = await context.read<PaymentService>().openCheckout(
-              amount: amount,
-              planName: tier.name,
-              userEmail: userEmail,
-              userPhone: userPhone,
-            );
+      if (!mounted) return;
 
-        if (!mounted) return;
-
-        if (isSuccess) {
-          // Check if upgrade was successful
-          final newTier = context.read<SubscriptionService>().currentTier;
-
-          if (newTier == tier || newTier == SubscriptionTier.businessShield || newTier == SubscriptionTier.enterprise || newTier == SubscriptionTier.protection) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('✅ Successfully upgraded to ${tier.name}!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('⏳ Payment processing... Please refresh later.'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
-
-          Navigator.pop(context);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('❌ Payment failed or cancelled.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+      if (result == true) {
+        // Payment was successful — pop the upgrade screen too
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Error: $e'),
-            backgroundColor: Colors.red,
+            content: Text('🎉 Welcome to the ${tier.name} plan!'),
+            backgroundColor: AppTheme.accentGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      debugPrint('❌ [Upgrade] Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.dangerRed),
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
@@ -105,9 +108,7 @@ class _SubscriptionUpgradeScreenState extends State<SubscriptionUpgradeScreen> {
         title: const Text('Choose Your Plan'),
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
+      body: ListView(
               padding: const EdgeInsets.all(20),
               children: [
                 // Header Section
@@ -497,8 +498,6 @@ class _SubscriptionUpgradeScreenState extends State<SubscriptionUpgradeScreen> {
   }
 
   Future<void> _activateTrial() async {
-    setState(() => _isLoading = true);
-    // Use context.read directly (this.context)
     final subscriptionService = context.read<SubscriptionService>();
 
     try {
@@ -519,8 +518,6 @@ class _SubscriptionUpgradeScreenState extends State<SubscriptionUpgradeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

@@ -18,14 +18,16 @@ class AuthService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
 
-  AuthService() {
+  AuthService({FirebaseAuth? auth, FirebaseFirestore? firestore}) {
+    _auth = auth;
+    _firestore = firestore;
     _initialize();
   }
 
   void _initialize() {
     try {
-      _auth = FirebaseAuth.instance;
-      _firestore = FirebaseFirestore.instance;
+      _auth ??= FirebaseAuth.instance;
+      _firestore ??= FirebaseFirestore.instance;
 
       _authStateSubscription = _auth?.authStateChanges().listen((User? user) {
         _user = user;

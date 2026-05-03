@@ -41,62 +41,69 @@ void callbackDispatcher() {
 }
 
 /// Resets weekly AI query counters for all active users
-  Future<void> _handleWeeklyReset() async {
-    try {
-      debugPrint('🔄 Starting weekly AI query reset...');
-      final firestore = FirebaseFirestore.instance;
+Future<void> _handleWeeklyReset() async {
+  try {
+    debugPrint('🔄 Starting weekly AI query reset...');
+    final firestore = FirebaseFirestore.instance;
 
-      // Get all users with non-zero ai_queries_this_week
-      final query = await firestore
-          .collection('users')
-          .where('ai_queries_this_week', isNotEqualTo: 0)
-          .get();
+    // Get all users with non-zero ai_queries_this_week
+    final querySnapshot = await firestore
+        .collection('users')
+        .where('ai_queries_this_week', isNotEqualTo: 0)
+        .get();
 
-      debugPrint('📊 Resetting ${query.docs.length} users');
+    debugPrint('📊 Resetting ${querySnapshot.docs.length} users');
 
-      // Batch update to reset counters
+    // Process in batches of 500 (Firestore limit)
+    final docs = querySnapshot.docs;
+    for (var i = 0; i < docs.length; i += 500) {
       final batch = firestore.batch();
-      for (var doc in query.docs) {
-        batch.update(doc.reference, {
+      final end = (i + 500 < docs.length) ? i + 500 : docs.length;
+      
+      for (var j = i; j < end; j++) {
+        batch.update(docs[j].reference, {
           'ai_queries_this_week': 0,
           'last_reset_at': FieldValue.serverTimestamp(),
         });
       }
-
+      
       await batch.commit();
-      debugPrint('✅ Weekly AI query reset completed');
-    } catch (e) {
-      debugPrint('❌ Weekly reset failed: $e');
+      debugPrint('✅ Batch ${i ~/ 500 + 1} committed');
     }
+
+    debugPrint('✅ Weekly AI query reset completed');
+  } catch (e) {
+    debugPrint('❌ Weekly reset failed: $e');
   }
+}
 
-  class BackgroundService {
-    static Future<void> initialize() async {
-      await Workmanager().initialize(callbackDispatcher);
+class BackgroundService {
+  static Future<void> initialize() async {
+    await Workmanager().initialize(callbackDispatcher);
 
-      // Daily task - continually runs every 24 hours
-      await Workmanager().registerPeriodicTask(
-        "daily-license-check",
-        simplePeriodicTask,
-        frequency: const Duration(hours: 24),
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-        ),
-        existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
-      );
+    // Daily task - continually runs every 24 hours
+    await Workmanager().registerPeriodicTask(
+      "daily-license-check",
+      simplePeriodicTask,
+      frequency: const Duration(hours: 24),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+    );
 
-      // Weekly task - reset AI query counters every Monday at midnight
-      await Workmanager().registerPeriodicTask(
-        "weekly-ai-reset",
-        weeklyResetTask,
-        frequency: const Duration(days: 7),
-        constraints: Constraints(
-          networkType: NetworkType.connected,
-        ),
-        existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-      );
+    // Weekly task - reset AI query counters every Monday at midnight
+    await Workmanager().registerPeriodicTask(
+      "weekly-ai-reset",
+      weeklyResetTask,
+      frequency: const Duration(days: 7),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
+    );
 
-      debugPrint(
-          "Background Service Initialized - Daily & Weekly tasks scheduled");
-    }
+    debugPrint(
+        "Background Service Initialized - Daily & Weekly tasks scheduled");
   }
+}

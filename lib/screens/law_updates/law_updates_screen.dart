@@ -11,7 +11,7 @@ import '../subscription/subscription_upgrade_screen.dart';
 // import '../../services/compliance_service.dart'; // Removed
 // Added
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:rulewise/utils/url_helper.dart';
 
 class LawUpdatesScreen extends StatefulWidget {
   const LawUpdatesScreen({super.key});
@@ -275,12 +275,13 @@ class _LawUpdatesScreenState extends State<LawUpdatesScreen> {
             // Actions
             Row(
               children: [
-                if (sourceUrl.isNotEmpty)
                   TextButton.icon(
                     onPressed: () async {
-                      final uri = Uri.parse(sourceUrl);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri);
+                      final success = await openUrl(sourceUrl);
+                      if (!success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Could not open the source URL. Please check your internet connection.')),
+                        );
                       }
                     },
                     icon: const Icon(Icons.open_in_new, size: 16),

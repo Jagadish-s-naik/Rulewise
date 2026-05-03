@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import '../../utils/url_helper.dart';
 import '../../models/license_model.dart';
 import 'document_preparation_guide.dart';
 
@@ -415,16 +416,6 @@ class _LicenseApplicationWizardState extends State<LicenseApplicationWizard> {
   }
 
   Future<void> _openApplicationUrl() async {
-    // Add https:// if URL doesn't have a scheme
-    String formattedUrl = widget.license.applicationUrl;
-    if (!widget.license.applicationUrl.startsWith('http://') &&
-        !widget.license.applicationUrl.startsWith('https://')) {
-      formattedUrl = 'https://${widget.license.applicationUrl}';
-    }
-
-    final uri = Uri.parse(formattedUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    await openUrl(widget.license.applicationUrl);
   }
 }

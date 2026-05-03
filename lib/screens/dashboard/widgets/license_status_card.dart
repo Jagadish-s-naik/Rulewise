@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+import '../../../utils/url_helper.dart';
 import '../../../models/license_model.dart';
 import '../../../models/user_license_model.dart';
 import '../../license/add_license_screen.dart';
 import '../../license/license_details_screen.dart';
+import '../../../theme/app_theme.dart';
 
 class LicenseStatusCard extends StatelessWidget {
   final LicenseModel license;
@@ -218,7 +220,7 @@ class LicenseStatusCard extends StatelessWidget {
             icon: const Icon(Icons.open_in_new, size: 18),
             label: const Text('Apply Online'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: AppTheme.accentGreen,
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),
@@ -252,35 +254,14 @@ class LicenseStatusCard extends StatelessWidget {
   }
 
   Future<void> _openApplicationUrl(BuildContext context, String url) async {
-    try {
-      // Add https:// if URL doesn't have a scheme
-      String formattedUrl = url;
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        formattedUrl = 'https://$url';
-      }
-
-      final uri = Uri.parse(formattedUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not open: $formattedUrl'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error opening URL: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    final success = await openUrl(url);
+    if (!success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open the application portal. Please check your internet connection.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

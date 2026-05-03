@@ -6,7 +6,7 @@ import '../../services/subscription_service.dart';
 import '../../models/subscription_plan.dart';
 import '../subscription/subscription_upgrade_screen.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:rulewise/utils/url_helper.dart';
 
 class LawChangeRadarScreen extends StatefulWidget {
   const LawChangeRadarScreen({super.key});
@@ -430,9 +430,11 @@ class _LawChangeRadarScreenState extends State<LawChangeRadarScreen> {
                   if (sourceUrl.isNotEmpty)
                     TextButton.icon(
                       onPressed: () async {
-                        final uri = Uri.parse(sourceUrl);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
+                        final success = await openUrl(sourceUrl);
+                        if (!success && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not open the source URL. Please check your internet connection.')),
+                          );
                         }
                       },
                       icon: const Icon(Icons.open_in_new, size: 16),
@@ -488,12 +490,14 @@ class _LawChangeRadarScreenState extends State<LawChangeRadarScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final uri = Uri.parse(update['source_url']);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri);
-                      }
-                    },
+                      onPressed: () async {
+                        final success = await openUrl(update['source_url']);
+                        if (!success && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Could not open the source URL. Please check your internet connection.')),
+                          );
+                        }
+                      },
                     icon: const Icon(Icons.open_in_new),
                     label: const Text('View Official Notification'),
                   ),

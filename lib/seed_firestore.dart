@@ -43,7 +43,7 @@ Future<void> _seedLawUpdates(FirebaseFirestore firestore) async {
       'states': ['All India'],
       'business_types': ['food_beverage', 'retail_shop'],
       'impact': 'high',
-      'source_url': 'https://www.fssai.gov.in/notifications',
+      'source_url': 'https://www.fssai.gov.in',
     },
     {
       'title': 'GST Rate Changes for Restaurants',
