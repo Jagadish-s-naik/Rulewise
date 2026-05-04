@@ -5,12 +5,16 @@ import '../models/notification_model.dart';
 import '../models/user_license_model.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+  
+  bool _isInitialized = false;
+  bool get isInitialized => _isInitialized;
 
   List<NotificationModel> _notifications = [];
   bool _isLoading = false;
@@ -34,6 +38,8 @@ class NotificationService extends ChangeNotifier {
         debugPrint('Notification clicked: ${details.payload}');
       },
     );
+
+    _isInitialized = true;
 
     // 2. Fetch internal notifications
     await fetchNotifications();
@@ -84,15 +90,41 @@ class NotificationService extends ChangeNotifier {
   // --- Scheduling Methods ---
 
   Future<void> scheduleAllRenewalAlerts(UserLicenseModel license) async {
-    // Ideally use flutter_local_notifications here
-    debugPrint('Scheduling renewal alerts for ${license.licenseName} (stub)');
+    debugPrint('📅 Scheduling all alerts for ${license.licenseName}');
+    
+    final expiry = license.expiryDate;
+    
+    // Schedule 30 days before
+    await scheduleRenewalReminder(
+      license: license,
+      reminderDate: expiry.subtract(const Duration(days: 30)),
+      title: 'Action Required: ${license.licenseName}',
+      body: 'Your license expires in 30 days. Start the renewal process now.',
+    );
 
-    // Also create an in-app notification for "Scheduled"
-    // This is optional but nice for verification
+    // Schedule 7 days before
+    await scheduleRenewalReminder(
+      license: license,
+      reminderDate: expiry.subtract(const Duration(days: 7)),
+      title: 'Urgent: ${license.licenseName} Expiring',
+      body: 'Your license expires in 7 days. Avoid penalties by renewing today.',
+    );
+
+    // Schedule on expiry day
+    await scheduleRenewalReminder(
+      license: license,
+      reminderDate: expiry,
+      title: 'Critical: ${license.licenseName} Expired',
+      body: 'Your license has expired. You may be liable for penalties.',
+    );
   }
 
   Future<void> cancelRenewalAlerts(String licenseId) async {
-    debugPrint('Cancelling renewal alerts for license ID: $licenseId (stub)');
+    debugPrint('🚫 Cancelling all alerts for license: $licenseId');
+    // Using hash of licenseId as group ID for cancellation
+    await _localNotifications.cancel(licenseId.hashCode);
+    await _localNotifications.cancel(licenseId.hashCode + 1);
+    await _localNotifications.cancel(licenseId.hashCode + 2);
   }
 
   /// Schedule a specific renewal reminder
@@ -104,23 +136,44 @@ class NotificationService extends ChangeNotifier {
   }) async {
     // Only schedule if the reminder date is in the future
     if (reminderDate.isBefore(DateTime.now())) {
-      debugPrint('⏭️ Skipping past reminder for ${license.licenseName}');
       return;
     }
 
     try {
-      // Calculate delay from now
-      final delay = reminderDate.difference(DateTime.now());
+      final scheduledTime = tz.TZDateTime.from(reminderDate, tz.local);
+      
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'renewal_reminders',
+        'Renewal Reminders',
+        channelDescription: 'Alerts for license renewals',
+        importance: Importance.max,
+        priority: Priority.high,
+      );
 
-      // For now, just log the scheduled reminder
-      // In production, you'd use flutter_local_notifications with proper timezone support
-      debugPrint(
-          '📅 Scheduled reminder for ${license.licenseName} in ${delay.inDays} days');
+      const NotificationDetails details = NotificationDetails(android: androidDetails);
 
-      // Pending: Implement actual notification scheduling with flutter_local_notifications
-      // This requires proper timezone initialization which should be done in main.dart
+      // Use a combination of license hashCode and offset to ensure unique IDs for multiple reminders
+      int notificationId = license.id.hashCode;
+      if (reminderDate.isAtSameMomentAs(license.expiryDate)) {
+        notificationId += 2;
+      } else if (reminderDate.isAfter(license.expiryDate.subtract(const Duration(days: 8)))) {
+        notificationId += 1;
+      }
+
+      await _localNotifications.zonedSchedule(
+        notificationId,
+        title,
+        body,
+        scheduledTime,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'license_id=${license.id}',
+      );
+
+      debugPrint('✅ Scheduled: "$title" at $scheduledTime');
     } catch (e) {
-      debugPrint('Error scheduling renewal reminder: $e');
+      debugPrint('❌ Error scheduling renewal reminder: $e');
     }
   }
 
@@ -232,5 +285,11 @@ class NotificationService extends ChangeNotifier {
     }
 
     await batch.commit();
+  }
+
+  void clear() {
+    _notifications = [];
+    _isLoading = false;
+    notifyListeners();
   }
 }

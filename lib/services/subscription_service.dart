@@ -344,4 +344,14 @@ class SubscriptionService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  /// Clear subscription data (called on logout)
+  void clear() {
+    _currentTier = SubscriptionTier.free;
+    _aiQueriesUsedThisWeek = 0;
+    _isTrialActive = false;
+    _trialEndsAt = null;
+    _hasUsedTrial = false;
+    notifyListeners();
+  }
 }

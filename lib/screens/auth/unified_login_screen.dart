@@ -46,7 +46,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
       setState(() => _isLoading = false);
 
       if (success) {
-        Navigator.of(context).pushReplacementNamed('/');
+        Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

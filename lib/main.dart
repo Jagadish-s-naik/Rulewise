@@ -15,6 +15,8 @@ import 'package:rulewise/services/fcm_service.dart';
 import 'package:rulewise/services/payment_service.dart';
 import 'package:rulewise/services/law_change_radar_service.dart';
 import 'package:rulewise/services/background_service.dart';
+import 'package:rulewise/screens/main_screen.dart';
+import 'package:rulewise/screens/auth/unified_login_screen.dart';
 import 'package:rulewise/screens/splash_screen.dart';
 import 'package:rulewise/theme/app_theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -42,7 +44,6 @@ void main() async {
       debugPrint('✅ Environment variables loaded');
     } catch (e) {
       debugPrint('⚠️ Warning: .env file not found. Using default values.');
-      // Continue anyway - app will use default/fallback values
     }
 
     // Initialize Firebase
@@ -56,7 +57,6 @@ void main() async {
           _firebaseMessagingBackgroundHandler);
     } catch (e) {
       debugPrint('Warning: Firebase initialization failed: $e');
-      // Continue anyway - app handles offline mode
     }
 
     // Initialize Remote Config
@@ -72,36 +72,35 @@ void main() async {
     // Initialize Hive for offline storage
     await Hive.initFlutter();
 
-    // Initialize notification service - Soft fail
+    // Initialize notification service early
+    final notificationService = NotificationService();
     try {
-      final notificationService = NotificationService();
       await notificationService.initialize();
-      // Don't await permissions here as it might block UI on some OS versions
       notificationService.requestPermissions();
     } catch (e) {
       debugPrint('Warning: Notification init failed: $e');
     }
 
-    // Initialize Background Services (Fire-and-forget to prevent app freeze)
+    // Initialize Background Services
     _initializeBackgroundServices();
 
   } catch (e) {
     debugPrint('Critical Initialization Error: $e');
   }
 
-  // ALWAYS run the app, even if some services fail
-  runApp(RuleWiseApp(remoteConfigService: remoteConfigService));
+  runApp(RuleWiseApp(
+    remoteConfigService: remoteConfigService,
+    notificationService: notificationService,
+  ));
 }
 
 Future<void> _initializeBackgroundServices() async {
-  // Initialize Background Service (Workmanager)
   try {
     await BackgroundService.initialize();
   } catch (e) {
     debugPrint('Warning: Background Service init failed: $e');
   }
 
-  // Initialize FCM (Push Notifications)
   try {
     final fcmService = FCMService();
     await fcmService.initialize();
@@ -112,8 +111,13 @@ Future<void> _initializeBackgroundServices() async {
 
 class RuleWiseApp extends StatelessWidget {
   final RemoteConfigService? remoteConfigService;
+  final NotificationService notificationService;
   
-  const RuleWiseApp({super.key, this.remoteConfigService});
+  const RuleWiseApp({
+    super.key, 
+    this.remoteConfigService,
+    required this.notificationService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -121,17 +125,54 @@ class RuleWiseApp extends StatelessWidget {
       providers: [
         Provider<RemoteConfigService?>.value(value: remoteConfigService),
         ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => ComplianceService()),
-        ChangeNotifierProvider(create: (_) => ValidationService()),
-        ChangeNotifierProvider(create: (_) => ProfileService()),
-        ChangeNotifierProvider(create: (_) => NotificationService()),
-        ChangeNotifierProvider(create: (_) => UserLicenseService()),
-        ChangeNotifierProxyProvider<RemoteConfigService?, SubscriptionService>(
-          create: (_) => SubscriptionService()..init(),
-          update: (_, remoteConfig, subscriptionService) =>
-              subscriptionService!..updateRemoteConfig(remoteConfig),
+        
+        // Services that depend on Auth state for data clearing
+        ChangeNotifierProxyProvider<AuthService, ProfileService>(
+          create: (_) => ProfileService(),
+          update: (_, auth, profile) {
+            if (!auth.isAuthenticated) profile?.clear();
+            return profile!;
+          },
         ),
-        ChangeNotifierProvider(create: (_) => LawChangeRadarService()),
+        ChangeNotifierProxyProvider<AuthService, ComplianceService>(
+          create: (_) => ComplianceService(),
+          update: (_, auth, compliance) {
+            if (!auth.isAuthenticated) compliance?.clear();
+            return compliance!;
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthService, ValidationService>(
+          create: (_) => ValidationService(),
+          update: (_, auth, validation) => validation!,
+        ),
+        ChangeNotifierProxyProvider<AuthService, NotificationService>(
+          create: (_) => notificationService,
+          update: (_, auth, notifications) {
+            if (!auth.isAuthenticated) notifications?.clear();
+            return notifications!;
+          },
+        ),
+        ChangeNotifierProxyProvider2<AuthService, NotificationService, UserLicenseService>(
+          create: (_) => UserLicenseService(),
+          update: (_, auth, notifications, license) {
+            if (!auth.isAuthenticated) license?.clear();
+            return license!..updateNotificationService(notifications);
+          },
+        ),
+        ChangeNotifierProxyProvider2<AuthService, RemoteConfigService?, SubscriptionService>(
+          create: (_) => SubscriptionService()..init(),
+          update: (_, auth, remoteConfig, subscription) {
+            if (!auth.isAuthenticated) subscription?.clear();
+            return subscription!..updateRemoteConfig(remoteConfig);
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthService, LawChangeRadarService>(
+          create: (_) => LawChangeRadarService(),
+          update: (_, auth, radar) {
+            if (!auth.isAuthenticated) radar?.clear();
+            return radar!;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ProxyProvider<SubscriptionService, PaymentService>(
           create: (ctx) => PaymentService(ctx.read<SubscriptionService>()),
@@ -149,6 +190,12 @@ class RuleWiseApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system,
             locale: localeProvider.locale,
+            initialRoute: '/',
+            routes: {
+              '/': (context) => const SplashScreen(),
+              '/dashboard': (context) => const MainScreen(),
+              '/login': (context) => const UnifiedLoginScreen(),
+            },
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -156,7 +203,6 @@ class RuleWiseApp extends StatelessWidget {
               GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const SplashScreen(),
           );
         },
       ),

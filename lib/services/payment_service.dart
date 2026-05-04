@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:rulewise/services/subscription_service.dart';
 
@@ -7,12 +8,11 @@ class PaymentService {
   Razorpay? _razorpay; // nullable — not initialised on web
   final SubscriptionService _subscriptionService;
 
-  // ⚠️ REPLACE WITH YOUR REAL KEY FROM RAZORPAY DASHBOARD
-  static const String _keyId = 'rzp_test_PLACEHOLDER';
+  // Load from .env for security
+  static String get _keyId => dotenv.env['RAZORPAY_KEY_ID'] ?? 'rzp_test_PLACEHOLDER';
 
-  // Set to TRUE to bypass real Razorpay SDK while waiting for keys.
-  // Always forced true on web (plugin not supported).
-  static const bool _useMockMode = true;
+  // Controlled by .env flag
+  static bool get _useMockMode => dotenv.env['ENABLE_RAZORPAY_MOCK'] == 'true';
 
   // Temp storage for pending transaction
   String? _pendingPlanName;
