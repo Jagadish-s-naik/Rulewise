@@ -205,6 +205,13 @@ class ProfileService extends ChangeNotifier {
       rethrow;
     }
   }
+
+  /// Clear profile data (called on logout)
+  void clear() {
+    _userProfile = null;
+    _isLoading = false;
+    notifyListeners();
+  }
 }
 
 /// Simple user profile model

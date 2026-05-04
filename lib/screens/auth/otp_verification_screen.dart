@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/auth_service.dart';
 import '../profile/profile_setup_screen.dart';
-import '../dashboard/dashboard_screen.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String verificationId;
@@ -85,11 +84,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
           if (mounted) {
             if (profileCompleted) {
               // Profile complete - go to dashboard
-              Navigator.pushAndRemoveUntil(
+              Navigator.pushNamedAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const DashboardScreen(),
-                ),
+                '/dashboard',
                 (route) => false,
               );
             } else {

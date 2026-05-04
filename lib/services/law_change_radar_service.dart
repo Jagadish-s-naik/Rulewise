@@ -292,4 +292,11 @@ class LawChangeRadarService extends ChangeNotifier {
 
     return types;
   }
+
+  /// Clear law updates (called on logout)
+  void clear() {
+    _lawUpdates = [];
+    _isLoading = false;
+    notifyListeners();
+  }
 }

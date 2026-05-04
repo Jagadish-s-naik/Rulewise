@@ -12,9 +12,15 @@ class UserLicenseService extends ChangeNotifier {
 
   List<UserLicenseModel> _userLicenses = [];
   bool _isLoading = false;
+  NotificationService? _notificationService;
 
   List<UserLicenseModel> get userLicenses => _userLicenses;
   bool get isLoading => _isLoading;
+
+  /// Update the notification service (called via ProxyProvider)
+  void updateNotificationService(NotificationService service) {
+    _notificationService = service;
+  }
 
   /// Load all user licenses
   Future<void> loadUserLicenses() async {
@@ -64,11 +70,11 @@ class UserLicenseService extends ChangeNotifier {
   /// Schedule renewal alerts for all user licenses
   Future<void> _scheduleAllRenewalAlerts() async {
     try {
-      final notificationService = NotificationService();
+      if (_notificationService == null) return;
 
       for (final license in _userLicenses) {
         if (license.renewalAlertsEnabled) {
-          await notificationService.scheduleAllRenewalAlerts(license);
+          await _notificationService!.scheduleAllRenewalAlerts(license);
         }
       }
     } catch (e) {
@@ -115,13 +121,12 @@ class UserLicenseService extends ChangeNotifier {
       await loadUserLicenses();
 
       // Schedule renewal alerts for the new license
-      if (userLicense.renewalAlertsEnabled) {
-        final notificationService = NotificationService();
+      if (userLicense.renewalAlertsEnabled && _notificationService != null) {
         // Get the newly added license with its ID
         final addedLicense = _userLicenses.firstWhere(
           (l) => l.licenseNumber == licenseNumber,
         );
-        await notificationService.scheduleAllRenewalAlerts(addedLicense);
+        await _notificationService!.scheduleAllRenewalAlerts(addedLicense);
       }
     } catch (e) {
       debugPrint('Error adding license: $e');
@@ -146,10 +151,11 @@ class UserLicenseService extends ChangeNotifier {
       await loadUserLicenses();
 
       // Reschedule renewal alerts
-      final notificationService = NotificationService();
-      await notificationService.cancelRenewalAlerts(license.id);
-      if (license.renewalAlertsEnabled) {
-        await notificationService.scheduleAllRenewalAlerts(license);
+      if (_notificationService != null) {
+        await _notificationService!.cancelRenewalAlerts(license.id);
+        if (license.renewalAlertsEnabled) {
+          await _notificationService!.scheduleAllRenewalAlerts(license);
+        }
       }
     } catch (e) {
       debugPrint('Error updating license: $e');
@@ -171,8 +177,9 @@ class UserLicenseService extends ChangeNotifier {
           .delete();
 
       // Cancel renewal alerts
-      final notificationService = NotificationService();
-      await notificationService.cancelRenewalAlerts(licenseId);
+      if (_notificationService != null) {
+        await _notificationService!.cancelRenewalAlerts(licenseId);
+      }
 
       _userLicenses.removeWhere((l) => l.id == licenseId);
       notifyListeners();
@@ -256,5 +263,12 @@ class UserLicenseService extends ChangeNotifier {
       debugPrint('Error adding user license: $e');
       rethrow;
     }
+  }
+
+  /// Clear license data (called on logout)
+  void clear() {
+    _userLicenses = [];
+    _isLoading = false;
+    notifyListeners();
   }
 }

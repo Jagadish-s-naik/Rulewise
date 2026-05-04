@@ -562,26 +562,34 @@ class ReportGenerationService {
       // Get appropriate directory based on platform
       Directory? directory;
       if (Platform.isAndroid) {
-        // For Android, use Downloads directory
-        debugPrint('📁 Creating Android Downloads directory...');
-        directory = Directory('/storage/emulated/0/Download/RuleWise');
-        if (!await directory.exists()) {
-          debugPrint('📁 Directory does not exist, creating...');
-          await directory.create(recursive: true);
-          debugPrint('✅ Directory created: ${directory.path}');
-        } else {
-          debugPrint('✅ Directory already exists: ${directory.path}');
+        // For Android, try to get the standard Downloads folder
+        // Fallback to internal storage if necessary
+        try {
+          // getExternalStorageDirectory() returns /storage/emulated/0/Android/data/com.example.app/files
+          // We want the user-facing Downloads folder if possible
+          final baseDir = await getExternalStorageDirectory();
+          if (baseDir != null) {
+            // Traverse up from Android/data/package/files to get to the root of external storage
+            // This is safer than hardcoding /storage/emulated/0
+            String path = baseDir.path;
+            if (path.contains('/Android/data')) {
+              path = path.split('/Android/data')[0];
+            }
+            directory = Directory('$path/Download/RuleWise');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Path resolution failed, falling back to app documents: $e');
+          directory = await getApplicationDocumentsDirectory();
         }
       } else if (Platform.isIOS) {
         // For iOS, use Documents directory
-        debugPrint('📁 Getting iOS Documents directory...');
         directory = await getApplicationDocumentsDirectory();
-        debugPrint('✅ iOS directory: ${directory.path}');
       }
 
-      if (directory == null) {
-        debugPrint('❌ Could not get storage directory');
-        return null;
+      directory ??= await getApplicationDocumentsDirectory();
+      
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
       }
 
       // Copy file to permanent location

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 
 class EmailLoginScreen extends StatefulWidget {
@@ -10,7 +11,6 @@ class EmailLoginScreen extends StatefulWidget {
 
 class _EmailLoginScreenState extends State<EmailLoginScreen> {
   final TextEditingController _emailController = TextEditingController();
-  final AuthService _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -40,7 +40,8 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
 
     try {
       // Send OTP via email
-      await _authService.sendEmailOTP(email);
+      final authService = context.read<AuthService>();
+      await authService.sendEmailOTP(email);
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -258,7 +259,6 @@ class EmailOTPVerificationScreen extends StatefulWidget {
 class _EmailOTPVerificationScreenState
     extends State<EmailOTPVerificationScreen> {
   final TextEditingController _otpController = TextEditingController();
-  final AuthService _authService = AuthService();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -287,11 +287,12 @@ class _EmailOTPVerificationScreenState
     });
 
     try {
-      await _authService.verifyEmailOTP(widget.email, otp);
+      final authService = context.read<AuthService>();
+      await authService.verifyEmailOTP(widget.email, otp);
 
       if (mounted) {
-        // Navigate to home or profile setup
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+        // Navigate to dashboard
+        Navigator.of(context).pushNamedAndRemoveUntil('/dashboard', (route) => false);
       }
     } catch (e) {
       setState(() {
@@ -303,7 +304,8 @@ class _EmailOTPVerificationScreenState
 
   Future<void> _resendOTP() async {
     try {
-      await _authService.sendEmailOTP(widget.email);
+      final authService = context.read<AuthService>();
+      await authService.sendEmailOTP(widget.email);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

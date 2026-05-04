@@ -397,4 +397,14 @@ class ComplianceService extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Clear compliance data (called on logout)
+  void clear() {
+    _applicableLicenses = [];
+    _complianceStatuses = [];
+    _metrics = null;
+    _isLoading = false;
+    _errorMessage = null;
+    notifyListeners();
+  }
 }
