@@ -35,6 +35,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   RemoteConfigService? remoteConfigService;
+  final notificationService = NotificationService();
+  
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -73,7 +75,6 @@ void main() async {
     await Hive.initFlutter();
 
     // Initialize notification service early
-    final notificationService = NotificationService();
     try {
       await notificationService.initialize();
       notificationService.requestPermissions();
@@ -83,7 +84,6 @@ void main() async {
 
     // Initialize Background Services
     _initializeBackgroundServices();
-
   } catch (e) {
     debugPrint('Critical Initialization Error: $e');
   }
@@ -112,9 +112,9 @@ Future<void> _initializeBackgroundServices() async {
 class RuleWiseApp extends StatelessWidget {
   final RemoteConfigService? remoteConfigService;
   final NotificationService notificationService;
-  
+
   const RuleWiseApp({
-    super.key, 
+    super.key,
     this.remoteConfigService,
     required this.notificationService,
   });
@@ -125,7 +125,7 @@ class RuleWiseApp extends StatelessWidget {
       providers: [
         Provider<RemoteConfigService?>.value(value: remoteConfigService),
         ChangeNotifierProvider(create: (_) => AuthService()),
-        
+
         // Services that depend on Auth state for data clearing
         ChangeNotifierProxyProvider<AuthService, ProfileService>(
           create: (_) => ProfileService(),
@@ -152,14 +152,16 @@ class RuleWiseApp extends StatelessWidget {
             return notifications!;
           },
         ),
-        ChangeNotifierProxyProvider2<AuthService, NotificationService, UserLicenseService>(
+        ChangeNotifierProxyProvider2<AuthService, NotificationService,
+            UserLicenseService>(
           create: (_) => UserLicenseService(),
           update: (_, auth, notifications, license) {
             if (!auth.isAuthenticated) license?.clear();
             return license!..updateNotificationService(notifications);
           },
         ),
-        ChangeNotifierProxyProvider2<AuthService, RemoteConfigService?, SubscriptionService>(
+        ChangeNotifierProxyProvider2<AuthService, RemoteConfigService?,
+            SubscriptionService>(
           create: (_) => SubscriptionService()..init(),
           update: (_, auth, remoteConfig, subscription) {
             if (!auth.isAuthenticated) subscription?.clear();
