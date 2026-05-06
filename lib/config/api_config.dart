@@ -1,44 +1,63 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
+// Configuration centralized for security and compile-time injection
 class ApiConfig {
+  // Firebase Configuration (Injected via --dart-define)
+  static const String firebaseWebApiKey =
+      String.fromEnvironment('FIREBASE_WEB_API_KEY');
+  static const String firebaseAndroidApiKey =
+      String.fromEnvironment('FIREBASE_ANDROID_API_KEY');
+  static const String firebaseWindowsApiKey =
+      String.fromEnvironment('FIREBASE_WINDOWS_API_KEY');
+
+  // Groq AI Configuration
+  static const String groqApiKey = String.fromEnvironment('GROQ_API_KEY');
+  static const String groqApiUrl =
+      'https://api.groq.com/openai/v1/chat/completions';
+
+  // Razorpay Configuration
+  static const String razorpayKeyId = String.fromEnvironment('RAZORPAY_KEY_ID');
+  static const bool enableRazorpayMock =
+      bool.fromEnvironment('ENABLE_RAZORPAY_MOCK', defaultValue: true);
+
   // API Setu Configuration
-  static String get apiSetuKey => dotenv.env['API_SETU_KEY'] ?? '';
-  static String get apiSetuBaseUrl =>
-      dotenv.env['API_SETU_BASE_URL'] ?? 'https://apisetu.gov.in/api';
-  static bool get enableApiSetu =>
-      dotenv.env['ENABLE_API_SETU']?.toLowerCase() == 'true';
+  static const String apiSetuKey = String.fromEnvironment('API_SETU_KEY');
+  static const String apiSetuBaseUrl =
+      String.fromEnvironment('API_SETU_BASE_URL', defaultValue: 'https://apisetu.gov.in/api');
+  static const bool enableApiSetu =
+      bool.fromEnvironment('ENABLE_API_SETU', defaultValue: false);
 
   // Open Government India Configuration
-  static String get openGovIndiaKey => dotenv.env['OPEN_GOV_INDIA_KEY'] ?? '';
-  static String get openGovIndiaBaseUrl =>
-      dotenv.env['OPEN_GOV_INDIA_BASE_URL'] ?? 'https://api.data.gov.in';
-  static bool get enableOpenGovIndia =>
-      dotenv.env['ENABLE_OPEN_GOV_INDIA']?.toLowerCase() == 'true';
+  static const String openGovIndiaKey =
+      String.fromEnvironment('OPEN_GOV_INDIA_KEY');
+  static const String openGovIndiaBaseUrl =
+      String.fromEnvironment('OPEN_GOV_INDIA_BASE_URL', defaultValue: 'https://api.data.gov.in');
+  static const bool enableOpenGovIndia =
+      bool.fromEnvironment('ENABLE_OPEN_GOV_INDIA', defaultValue: false);
 
   // Razorpay IFSC Configuration
-  static String get razorpayIfscBaseUrl =>
-      dotenv.env['RAZORPAY_IFSC_BASE_URL'] ?? 'https://ifsc.razorpay.com';
+  static const String razorpayIfscBaseUrl =
+      String.fromEnvironment('RAZORPAY_IFSC_BASE_URL', defaultValue: 'https://ifsc.razorpay.com');
 
   // Mutual Fund API Configuration
-  static String get mutualFundBaseUrl =>
-      dotenv.env['MUTUAL_FUND_BASE_URL'] ?? 'https://api.mfapi.in';
-  static bool get enableMutualFund =>
-      dotenv.env['ENABLE_MUTUAL_FUND']?.toLowerCase() == 'true';
+  static const String mutualFundBaseUrl =
+      String.fromEnvironment('MUTUAL_FUND_BASE_URL', defaultValue: 'https://api.mfapi.in');
+  static const bool enableMutualFund =
+      bool.fromEnvironment('ENABLE_MUTUAL_FUND', defaultValue: false);
 
   // Tax Data API Configuration
-  static String get taxDataApiKey => dotenv.env['TAX_DATA_API_KEY'] ?? '';
-  static String get taxDataBaseUrl =>
-      dotenv.env['TAX_DATA_BASE_URL'] ?? 'https://api.apilayer.com/tax_data';
-  static bool get enableTaxData =>
-      dotenv.env['ENABLE_TAX_DATA']?.toLowerCase() == 'true';
+  static const String taxDataApiKey = String.fromEnvironment('TAX_DATA_API_KEY');
+  static const String taxDataBaseUrl =
+      String.fromEnvironment('TAX_DATA_BASE_URL', defaultValue: 'https://api.apilayer.com/tax_data');
+  static const bool enableTaxData =
+      bool.fromEnvironment('ENABLE_TAX_DATA', defaultValue: false);
 
   // VAT Validation API Configuration
-  static String get vatValidationApiKey =>
-      dotenv.env['VAT_VALIDATION_API_KEY'] ?? '';
-  static String get vatValidationBaseUrl =>
-      dotenv.env['VAT_VALIDATION_BASE_URL'] ?? 'https://vat.abstractapi.com/v1';
-  static bool get enableVatValidation =>
-      dotenv.env['ENABLE_VAT_VALIDATION']?.toLowerCase() == 'true';
+  static const String vatValidationApiKey =
+      String.fromEnvironment('VAT_VALIDATION_API_KEY');
+  static const String vatValidationBaseUrl =
+      String.fromEnvironment('VAT_VALIDATION_BASE_URL', defaultValue: 'https://vat.abstractapi.com/v1');
+  static const bool enableVatValidation =
+      bool.fromEnvironment('ENABLE_VAT_VALIDATION', defaultValue: false);
+
 
   // Validation helpers
   static bool get hasApiSetuKey => apiSetuKey.isNotEmpty;

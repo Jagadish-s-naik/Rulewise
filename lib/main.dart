@@ -20,7 +20,6 @@ import 'package:rulewise/screens/auth/unified_login_screen.dart';
 import 'package:rulewise/screens/splash_screen.dart';
 import 'package:rulewise/theme/app_theme.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:rulewise/l10n/app_localizations.dart';
 import 'package:rulewise/services/locale_provider.dart';
@@ -29,12 +28,10 @@ import 'package:rulewise/services/remote_config_service.dart';
 // Top-level function for handling background messages
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint("Error loading .env in background isolate: $e");
-  }
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Ensure Firebase is initialized
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
@@ -45,14 +42,6 @@ void main() async {
   
   try {
     WidgetsFlutterBinding.ensureInitialized();
-
-    // Initialize environment variables
-    try {
-      await dotenv.load(fileName: ".env");
-      debugPrint('✅ Environment variables loaded');
-    } catch (e) {
-      debugPrint('⚠️ Warning: .env file not found. Using default values.');
-    }
 
     // Initialize Firebase
     try {

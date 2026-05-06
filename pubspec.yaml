@@ -41,8 +41,7 @@ dependencies:
   # HTTP for AI API calls
   http: ^1.6.0
   
-  # Environment variables
-  flutter_dotenv: ^5.1.0
+
   
   # Email sending
   mailer: ^6.1.2
@@ -77,8 +76,7 @@ flutter:
   generate: true
   
   # Assets
-  assets:
-    - .env
+
   
   # Premium Typography via Google Fonts
   # Using Inter font as Circular fallback (configured in theme)

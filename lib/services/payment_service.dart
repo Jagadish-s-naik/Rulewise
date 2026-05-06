@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:rulewise/config/api_config.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:rulewise/services/subscription_service.dart';
+
 
 class PaymentService {
   Razorpay? _razorpay; // nullable — not initialised on web
   final SubscriptionService _subscriptionService;
 
-  // Load from .env for security
-  static String get _keyId => dotenv.env['RAZORPAY_KEY_ID'] ?? 'rzp_test_PLACEHOLDER';
+  // Load from ApiConfig for security
+  static String get _keyId => ApiConfig.razorpayKeyId;
 
-  // Controlled by .env flag
-  static bool get _useMockMode => dotenv.env['ENABLE_RAZORPAY_MOCK'] == 'true';
+  // Controlled by ApiConfig flag
+  static bool get _useMockMode => ApiConfig.enableRazorpayMock;
+
 
   // Temp storage for pending transaction
   String? _pendingPlanName;

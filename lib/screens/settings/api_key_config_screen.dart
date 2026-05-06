@@ -21,8 +21,9 @@ class _APIKeyConfigScreenState extends State<APIKeyConfigScreen> {
 
   Future<void> _loadSavedKey() async {
     final prefs = await SharedPreferences.getInstance();
-    final key = prefs.getString('gemini_api_key');
+    final key = prefs.getString('groq_api_key');
     if (key != null && key.isNotEmpty) {
+
       setState(() {
         _savedKey =
             '${key.substring(0, 10)}...${key.substring(key.length - 4)}';
@@ -38,16 +39,18 @@ class _APIKeyConfigScreenState extends State<APIKeyConfigScreen> {
       return;
     }
 
-    if (!apiKey.startsWith('AIza')) {
-      _showError('Invalid API key format. Should start with "AIza"');
+    if (!apiKey.startsWith('gsk_')) {
+      _showError('Invalid API key format. Groq keys should start with "gsk_"');
       return;
     }
+
 
     setState(() => _isLoading = true);
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('gemini_api_key', apiKey);
+      await prefs.setString('groq_api_key', apiKey);
+
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -78,8 +81,9 @@ class _APIKeyConfigScreenState extends State<APIKeyConfigScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gemini API Configuration'),
+        title: const Text('AI Configuration (Groq)'),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -92,7 +96,7 @@ class _APIKeyConfigScreenState extends State<APIKeyConfigScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Configure Gemini API Key',
+              'Configure Groq AI Key',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -101,10 +105,11 @@ class _APIKeyConfigScreenState extends State<APIKeyConfigScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Enter your Google Gemini API key to enable the AI assistant',
+              'Enter your Groq API key to enable high-speed AI compliance assistant',
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),
+
             const SizedBox(height: 32),
             if (_savedKey != null) ...[
               Container(
@@ -146,13 +151,14 @@ class _APIKeyConfigScreenState extends State<APIKeyConfigScreen> {
             TextField(
               controller: _apiKeyController,
               decoration: const InputDecoration(
-                labelText: 'Gemini API Key',
-                hintText: 'AIza...',
+                labelText: 'Groq API Key',
+                hintText: 'gsk_...',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.vpn_key),
               ),
               obscureText: true,
             ),
+
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _saveApiKey,
@@ -190,12 +196,13 @@ class _APIKeyConfigScreenState extends State<APIKeyConfigScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    '1. Visit: https://makersuite.google.com/app/apikey\n'
-                    '2. Sign in with your Google account\n'
+                    '1. Visit: https://console.groq.com/keys\n'
+                    '2. Sign in or create a Groq account\n'
                     '3. Click "Create API Key"\n'
                     '4. Copy the key and paste it above',
                     style: TextStyle(fontSize: 12),
                   ),
+
                 ],
               ),
             ),

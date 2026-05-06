@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:meta/meta.dart';
 import '../models/extracted_data_model.dart';
+
 
 class OCRService {
   final _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
@@ -15,14 +17,17 @@ class OCRService {
       String rawText = recognizedText.text;
       debugPrint("OCR Raw Text: $rawText");
 
-      return _parseText(rawText);
+      return parseText(rawText);
+
     } catch (e) {
       debugPrint("OCR Error: $e");
       return ExtractedDataModel(confidence: 0, rawText: '');
     }
   }
 
-  ExtractedDataModel _parseText(String text) {
+  @visibleForTesting
+  ExtractedDataModel parseText(String text) {
+
     String? licenseNumber;
     DateTime? expiryDate;
     DateTime? issueDate;

@@ -1,15 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rulewise/config/api_config.dart';
 import '../models/license_model.dart';
+
+
 
 class AIService {
   // Get your FREE Groq API key from: https://console.groq.com/keys
   // It's FREE, UNLIMITED, and MUCH FASTER than Gemini!
   // IMPORTANT: Replace the placeholder below with your actual Groq API key
-  static const String _groqApiKey =
-      'YOUR_GROQ_API_KEY_HERE'; // Replace with your Groq key
   static const String _apiUrl =
       'https://api.groq.com/openai/v1/chat/completions';
+
 
   /// Ask a question with full user context
   Future<String> askQuestion({
@@ -17,15 +20,27 @@ class AIService {
     required Map<String, dynamic> userProfile,
     required List<LicenseModel> applicableLicenses,
   }) async {
-    // Check if API key is configured (Mock Mode if not)
-    if (_groqApiKey.startsWith('gsk_') == false ||
-        _groqApiKey.contains('YOUR_GROQ')) {
+    // 1. Resolve API Key (Priority: SharedPreferences > ApiConfig)
+    final prefs = await SharedPreferences.getInstance();
+    final savedKey = prefs.getString('groq_api_key');
+    final activeApiKey = (savedKey != null && savedKey.isNotEmpty) 
+        ? savedKey 
+        : ApiConfig.groqApiKey;
+
+    // 2. Check for Mock Mode
+    bool isMockMode = ApiConfig.enableAIServiceMock || 
+                     activeApiKey.isEmpty || 
+                     activeApiKey.contains('PLACEHOLDER') ||
+                     !activeApiKey.startsWith('gsk_');
+
+    if (isMockMode) {
       // Use Local Intelligence Fallback (Offline Mode)
-      // This ensures the user gets value immediately without needing a key
       await Future.delayed(const Duration(seconds: 2)); // Simulate thinking
       return _getLocalIntelligenceResponse(
           question, applicableLicenses, userProfile);
     }
+
+
 
     try {
       final contextPrompt = _buildContextPrompt(
@@ -37,9 +52,11 @@ class AIService {
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {
-          'Authorization': 'Bearer $_groqApiKey',
+          'Authorization': 'Bearer $activeApiKey',
           'Content-Type': 'application/json',
         },
+
+
         body: jsonEncode({
           'model': 'llama-3.3-70b-versatile',
           'messages': [
