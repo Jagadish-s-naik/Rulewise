@@ -12,6 +12,8 @@ class ApiConfig {
   static const String groqApiKey = String.fromEnvironment('GROQ_API_KEY');
   static const String groqApiUrl =
       'https://api.groq.com/openai/v1/chat/completions';
+  static const bool enableAIServiceMock =
+      bool.fromEnvironment('ENABLE_AI_SERVICE_MOCK', defaultValue: true);
 
   // Razorpay Configuration
   static const String razorpayKeyId = String.fromEnvironment('RAZORPAY_KEY_ID');

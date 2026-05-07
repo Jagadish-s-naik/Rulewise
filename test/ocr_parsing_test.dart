@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rulewise/services/ocr_service.dart';
-import 'package:rulewise/models/extracted_data_model.dart';
 
 void main() {
   late OCRService ocrService;
