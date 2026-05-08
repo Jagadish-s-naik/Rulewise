@@ -3,7 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/license_model.dart';
@@ -77,33 +77,48 @@ class ReportGenerationService {
         ),
       );
 
-      // Save PDF to temporary file
-      final output = await getTemporaryDirectory();
+      // Save PDF and handle storage based on platform
+      String? localPath;
+      String? downloadUrl;
       final fileName =
           'RuleWise_Report_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final file = File('${output.path}/$fileName');
-      await file.writeAsBytes(await pdf.save());
-      debugPrint('📄 PDF generated in temp: ${file.path}');
+      final pdfBytes = await pdf.save();
 
-      // Save to device storage FIRST (priority)
-      final localPath = await _saveToDevice(file, fileName);
-      debugPrint('💾 Local save result: $localPath');
+      if (!kIsWeb) {
+        // Save PDF to temporary file (Mobile only)
+        final output = await getTemporaryDirectory();
+        final file = io.File('${output.path}/$fileName');
+        await file.writeAsBytes(pdfBytes);
+        debugPrint('📄 PDF generated in temp: ${file.path}');
 
-      // Try to upload to Firebase Storage (optional, don't fail if it errors)
-      String? downloadUrl;
-      try {
-        debugPrint('☁️ Attempting Firebase upload...');
-        final storageRef = _storage.ref().child('reports/$userId/$fileName');
-        await storageRef.putFile(file);
-        downloadUrl = await storageRef.getDownloadURL();
-        debugPrint('✅ Firebase upload successful: $downloadUrl');
-      } catch (storageError) {
-        debugPrint(
-            '⚠️ Firebase upload failed (continuing anyway): $storageError');
-        // Continue execution - local save is what matters
+        // Save to device storage FIRST (priority)
+        localPath = await _saveToDevice(file, fileName);
+        debugPrint('💾 Local save result: $localPath');
+
+        // Try to upload to Firebase Storage (Mobile)
+        try {
+          debugPrint('☁️ Attempting Firebase upload (Mobile)...');
+          final storageRef = _storage.ref().child('reports/$userId/$fileName');
+          await storageRef.putFile(file);
+          downloadUrl = await storageRef.getDownloadURL();
+          debugPrint('✅ Firebase upload successful: $downloadUrl');
+        } catch (storageError) {
+          debugPrint('⚠️ Firebase upload failed: $storageError');
+        }
+      } else {
+        // Web logic: Upload bytes directly
+        try {
+          debugPrint('☁️ Attempting Firebase upload (Web)...');
+          final storageRef = _storage.ref().child('reports/$userId/$fileName');
+          await storageRef.putData(pdfBytes);
+          downloadUrl = await storageRef.getDownloadURL();
+          debugPrint('✅ Firebase upload successful (Web): $downloadUrl');
+        } catch (storageError) {
+          debugPrint('⚠️ Firebase upload failed (Web): $storageError');
+        }
       }
 
-      // Try to store report metadata in Firestore (optional)
+      // Store report metadata in Firestore
       try {
         await _firestore
             .collection('users')
@@ -125,16 +140,7 @@ class ReportGenerationService {
         });
         debugPrint('✅ Report metadata saved to Firestore');
       } catch (firestoreError) {
-        debugPrint(
-            '⚠️ Firestore metadata save failed (continuing anyway): $firestoreError');
-      }
-
-      // Clean up temp file
-      try {
-        await file.delete();
-        debugPrint('🗑️ Temp file cleaned up');
-      } catch (e) {
-        debugPrint('⚠️ Could not delete temp file: $e');
+        debugPrint('⚠️ Firestore metadata save failed: $firestoreError');
       }
 
       return {
@@ -142,11 +148,8 @@ class ReportGenerationService {
         'local_path': localPath,
       };
     } catch (e) {
-      debugPrint('Error generating report: $e');
-      return {
-        'firebase_url': null,
-        'local_path': null,
-      };
+      debugPrint('❌ Error generating report: $e');
+      rethrow;
     }
   }
 
@@ -534,12 +537,13 @@ class ReportGenerationService {
   }
 
   /// Save PDF to device storage (Downloads folder)
-  Future<String?> _saveToDevice(File tempFile, String fileName) async {
+  Future<String?> _saveToDevice(io.File tempFile, String fileName) async {
+    if (kIsWeb) return null;
     try {
       debugPrint('💾 Starting _saveToDevice for: $fileName');
 
       // Request storage permission
-      if (Platform.isAndroid) {
+      if (io.Platform.isAndroid) {
         debugPrint('📱 Android detected, requesting storage permissions...');
         final status = await Permission.storage.request();
         debugPrint('📱 Storage permission status: $status');
@@ -560,8 +564,8 @@ class ReportGenerationService {
       }
 
       // Get appropriate directory based on platform
-      Directory? directory;
-      if (Platform.isAndroid) {
+      io.Directory? directory;
+      if (io.Platform.isAndroid) {
         // For Android, try to get the standard Downloads folder
         // Fallback to internal storage if necessary
         try {
@@ -575,13 +579,13 @@ class ReportGenerationService {
             if (path.contains('/Android/data')) {
               path = path.split('/Android/data')[0];
             }
-            directory = Directory('$path/Download/RuleWise');
+            directory = io.Directory('$path/Download/RuleWise');
           }
         } catch (e) {
           debugPrint('⚠️ Path resolution failed, falling back to app documents: $e');
           directory = await getApplicationDocumentsDirectory();
         }
-      } else if (Platform.isIOS) {
+      } else if (io.Platform.isIOS) {
         // For iOS, use Documents directory
         directory = await getApplicationDocumentsDirectory();
       }

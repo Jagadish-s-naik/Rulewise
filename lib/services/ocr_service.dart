@@ -1,23 +1,39 @@
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/extracted_data_model.dart';
-
 
 class OCRService {
   final _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
 
-  Future<ExtractedDataModel> scanImage(File imageFile) async {
+  Future<ExtractedDataModel> scanImage(Uint8List bytes) async {
+    if (kIsWeb) {
+      debugPrint("OCR: Not supported on web. Skipping.");
+      return ExtractedDataModel(
+          confidence: 0, rawText: 'OCR is currently only supported on mobile.');
+    }
+
     try {
-      final inputImage = InputImage.fromFile(imageFile);
+      // On mobile, we write bytes to a temp file to use ML Kit's fromFile
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = io.File(
+          '${tempDir.path}/temp_ocr_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await tempFile.writeAsBytes(bytes);
+
+      final inputImage = InputImage.fromFile(tempFile);
       final RecognizedText recognizedText =
           await _textRecognizer.processImage(inputImage);
+
+      // Clean up temp file
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
 
       String rawText = recognizedText.text;
       debugPrint("OCR Raw Text: $rawText");
 
       return parseText(rawText);
-
     } catch (e) {
       debugPrint("OCR Error: $e");
       return ExtractedDataModel(confidence: 0, rawText: '');

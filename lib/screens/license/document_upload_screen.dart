@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +28,8 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   bool _uploadComplete = false;
 
   String? _fileName;
-  String? _filePath;
+  Uint8List? _fileBytes;
+  String? _filePath; // Still useful for mobile if needed, but we prefer bytes now
   String _statusMessage = 'Select a document to upload';
   Color _statusColor = Colors.grey;
 
@@ -65,6 +67,9 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       );
 
       if (result != null) {
+        final bytes = result.files.single.bytes;
+        final path = result.files.single.path;
+
         setState(() {
           _isUploading = false;
           _uploadComplete = false;
@@ -72,11 +77,19 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
           _statusMessage = 'Document Selected';
           _statusColor = Colors.blue;
           _fileName = result.files.single.name;
-          _filePath = result.files.single.path;
+          _fileBytes = bytes;
+          _filePath = path;
         });
 
-        if (scan && _filePath != null) {
-          await _performOCR(File(_filePath!));
+        // If bytes are null (mobile sometimes), read from path
+        if (_fileBytes == null && _filePath != null && !kIsWeb) {
+          _fileBytes = await io.File(_filePath!).readAsBytes();
+        }
+
+        if (scan && (_fileBytes != null || _filePath != null)) {
+          if (_fileBytes != null) {
+            await _performOCR(_fileBytes!);
+          }
         }
       }
     } catch (e) {
@@ -88,7 +101,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     }
   }
 
-  Future<void> _performOCR(File imageFile) async {
+  Future<void> _performOCR(Uint8List imageBytes) async {
     setState(() {
       _isScanning = true;
       _statusMessage = 'Scanning with AI...';
@@ -96,7 +109,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     });
 
     try {
-      final data = await _ocrService.scanImage(imageFile);
+      final data = await _ocrService.scanImage(imageBytes);
 
       if (mounted) {
         setState(() {
@@ -130,7 +143,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   }
 
   Future<void> _saveToVault() async {
-    if (_filePath == null || _fileName == null) return;
+    if ((_fileBytes == null && _filePath == null) || _fileName == null) return;
 
     // Validate Input
     if (_licenseNumberController.text.isEmpty) {
@@ -147,8 +160,17 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       });
 
       // 1. Upload to Firebase Storage
+      // If we don't have bytes yet (mobile), we need to read them from path
+      Uint8List? uploadBytes = _fileBytes;
+      if (uploadBytes == null && _filePath != null && !kIsWeb) {
+        uploadBytes = await io.File(_filePath!).readAsBytes();
+        _fileBytes = uploadBytes; // Cache it
+      }
+
+      if (uploadBytes == null) throw Exception('No file data to upload');
+
       final downloadUrl = await _storageService.uploadDocument(
-        filePath: _filePath!,
+        bytes: uploadBytes,
         fileName: _fileName!,
       );
 

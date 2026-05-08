@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:http/http.dart' as http;
 
 /// Custom exception for API errors
@@ -29,7 +28,12 @@ class ApiErrorHandler {
       return error;
     }
 
-    if (error is SocketException) {
+    final errorString = error.toString().toLowerCase();
+    
+    // Check for network connectivity errors in a cross-platform way
+    if (errorString.contains('socketexception') || 
+        errorString.contains('failed host lookup') ||
+        errorString.contains('connection failed')) {
       return ApiException(
         'No internet connection. Please check your network and try again.',
       );

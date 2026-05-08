@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -37,56 +38,80 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 
 void main() async {
+  // 1. Ensure initialization is first
+  WidgetsFlutterBinding.ensureInitialized();
+  
   RemoteConfigService? remoteConfigService;
   final notificationService = NotificationService();
-  
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
+  final stopwatch = Stopwatch()..start();
 
-    // Initialize Firebase
+  debugPrint('🚀 RuleWise starting up...');
+
+  try {
+    // 2. Initialize Firebase with a safety net
     try {
+      debugPrint('🔥 Initializing Firebase...');
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
-      );
+      ).timeout(const Duration(seconds: 10), onTimeout: () {
+        debugPrint('⚠️ Firebase initialization timed out after 10s');
+        throw Exception('Firebase Timeout');
+      });
 
-      // Set background handler early
-      FirebaseMessaging.onBackgroundMessage(
-          _firebaseMessagingBackgroundHandler);
+      if (!kIsWeb) {
+        debugPrint('📲 Setting up background messaging...');
+        FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      }
     } catch (e) {
-      debugPrint('Warning: Firebase initialization failed: $e');
+      debugPrint('❌ Firebase Error: $e');
     }
 
-    // Initialize Remote Config
+    // 3. Initialize Remote Config (critical for features, but non-blocking for boot)
     try {
-      remoteConfigService = await RemoteConfigService.init();
+      debugPrint('⚙️ Initializing Remote Config...');
+      remoteConfigService = await RemoteConfigService.init()
+          .timeout(const Duration(seconds: 5), onTimeout: () {
+        debugPrint('⚠️ Remote Config timed out after 5s');
+        return RemoteConfigService.init(); // Retry or just return partially initialized
+      });
     } catch (e) {
-      debugPrint('Warning: Remote Config init failed: $e');
+      debugPrint('❌ Remote Config Error: $e');
     }
 
-    // Initialize timezone data for notifications
-    tz.initializeTimeZones();
-
-    // Initialize Hive for offline storage
-    await Hive.initFlutter();
-
-    // Initialize notification service early
+    // 4. Initialize timezones and storage
     try {
-      await notificationService.initialize();
-      notificationService.requestPermissions();
+      tz.initializeTimeZones();
+      await Hive.initFlutter().timeout(const Duration(seconds: 5));
     } catch (e) {
-      debugPrint('Warning: Notification init failed: $e');
+      debugPrint('❌ Hive/TZ Error: $e');
     }
 
-    // Initialize Background Services
-    _initializeBackgroundServices();
-  } catch (e) {
-    debugPrint('Critical Initialization Error: $e');
+    // 5. Initialize Notification Service (Mobile only for heavy init)
+    if (!kIsWeb) {
+      try {
+        await notificationService.initialize().timeout(const Duration(seconds: 5));
+        await notificationService.requestPermissions();
+      } catch (e) {
+        debugPrint('❌ Notification Service Error: $e');
+      }
+      
+      // 6. Initialize Background Services (Mobile only)
+      _initializeBackgroundServices();
+    }
+
+  } catch (e, stack) {
+    debugPrint('🚨 Critical startup failure: $e');
+    debugPrint(stack.toString());
+  } finally {
+    stopwatch.stop();
+    debugPrint('🏁 Startup process finished in ${stopwatch.elapsedMilliseconds}ms');
+    
+    // ALWAYS run the app, even if errors occurred
+    runApp(RuleWiseApp(
+      remoteConfigService: remoteConfigService,
+      notificationService: notificationService,
+    ));
   }
-
-  runApp(RuleWiseApp(
-    remoteConfigService: remoteConfigService,
-    notificationService: notificationService,
-  ));
 }
 
 Future<void> _initializeBackgroundServices() async {

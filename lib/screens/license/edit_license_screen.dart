@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'dart:io' as io;
 import '../../models/license_model.dart';
 import '../../models/user_license_model.dart';
 import '../../services/user_license_service.dart';
@@ -29,6 +30,7 @@ class _EditLicenseScreenState extends State<EditLicenseScreen> {
   late DateTime _issueDate;
   late DateTime _expiryDate;
   String? _documentPath;
+  Uint8List? _documentBytes;
   String? _documentUrl;
   bool _isUploading = false;
   bool _isSaving = false;
@@ -60,9 +62,17 @@ class _EditLicenseScreenState extends State<EditLicenseScreen> {
       );
 
       if (result != null && result.files.isNotEmpty) {
+        final bytes = result.files.first.bytes;
+        final path = result.files.first.path;
+
         setState(() {
-          _documentPath = result.files.first.path;
+          _documentPath = path;
+          _documentBytes = bytes;
         });
+
+        if (_documentBytes == null && _documentPath != null && !kIsWeb) {
+          _documentBytes = await io.File(_documentPath!).readAsBytes();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -77,18 +87,24 @@ class _EditLicenseScreenState extends State<EditLicenseScreen> {
   }
 
   Future<String?> _uploadDocument() async {
-    if (_documentPath == null) return _documentUrl;
+    if (_documentBytes == null && _documentPath == null) return _documentUrl;
 
     setState(() => _isUploading = true);
 
     try {
-      final file = File(_documentPath!);
+      Uint8List? uploadBytes = _documentBytes;
+      if (uploadBytes == null && _documentPath != null && !kIsWeb) {
+        uploadBytes = await io.File(_documentPath!).readAsBytes();
+      }
+
+      if (uploadBytes == null) throw Exception('No file data to upload');
+
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${widget.license.id}';
       final storageRef =
           FirebaseStorage.instance.ref().child('user_licenses').child(fileName);
 
-      await storageRef.putFile(file);
+      await storageRef.putData(uploadBytes);
       final downloadUrl = await storageRef.getDownloadURL();
 
       setState(() {

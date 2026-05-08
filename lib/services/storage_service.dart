@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -13,22 +12,14 @@ class StorageService {
   /// Uploads a file to the user's secure folder in Firebase Storage
   /// Returns the download URL
   Future<String?> uploadDocument({
-    required String filePath,
+    required Uint8List bytes,
     required String fileName,
   }) async {
     try {
       final user = _auth.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
-      final file = File(filePath);
-      if (!file.existsSync()) {
-        throw Exception('File does not exist at local path: $filePath');
-      }
-
-      // Read bytes to safely handle Scoped Storage on Android
-      // This bypasses 'putFile' permission issues by reading into memory first
-      final bytes = await file.readAsBytes();
-      debugPrint('📂 Reading file: ${bytes.lengthInBytes} bytes');
+      debugPrint('📂 Uploading file: ${bytes.lengthInBytes} bytes');
 
       // Create a secure path: users/{userId}/documents/{timestamp}_{fileName}
       final ref = _storage
