@@ -1,4 +1,6 @@
 # RuleWise 🏛️
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://rulewise-4ec59.web.app)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=google-chrome)](https://rulewise-4ec59.web.app)
 
 **Production-ready government compliance assistant for Indian businesses**
 
@@ -790,7 +792,7 @@ SOFTWARE.
 ## 📞 Support
 
 - **Email**: support@rulewise.in
-- **Website**: https://rulewise.in
+- **Website**: [rulewise-4ec59.web.app](https://rulewise-4ec59.web.app)
 - **GitHub Issues**: https://github.com/Jagadish-s-naik/Rulewise/issues
 - **Telegram**: @RuleWiseSupport (optional)
 
