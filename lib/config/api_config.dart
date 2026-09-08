@@ -1,12 +1,12 @@
 // Configuration centralized for security and compile-time injection
 class ApiConfig {
-  // Firebase Configuration (Injected via --dart-define)
+  // Firebase Configuration (Injected via --dart-define or --dart-define-from-file=.env)
   static const String firebaseWebApiKey =
-      String.fromEnvironment('FIREBASE_WEB_API_KEY', defaultValue: 'AIzaSyA8YyDzG5l9i6BDTJjX6rtOQbgRnvfU8EM');
+      String.fromEnvironment('FIREBASE_WEB_API_KEY');
   static const String firebaseAndroidApiKey =
-      String.fromEnvironment('FIREBASE_ANDROID_API_KEY', defaultValue: 'AIzaSyBe5dhwyD5HyMcR7G7de4a7Zugmo4Cg-7E');
+      String.fromEnvironment('FIREBASE_ANDROID_API_KEY');
   static const String firebaseWindowsApiKey =
-      String.fromEnvironment('FIREBASE_WINDOWS_API_KEY', defaultValue: 'AIzaSyA8YyDzG5l9i6BDTJjX6rtOQbgRnvfU8EM');
+      String.fromEnvironment('FIREBASE_WINDOWS_API_KEY');
 
   // Groq AI Configuration
   static const String groqApiKey = String.fromEnvironment('GROQ_API_KEY');
