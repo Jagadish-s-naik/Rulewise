@@ -70,9 +70,9 @@ void main() async {
     try {
       debugPrint('⚙️ Initializing Remote Config...');
       remoteConfigService = await RemoteConfigService.init()
-          .timeout(const Duration(seconds: 5), onTimeout: () {
-        debugPrint('⚠️ Remote Config timed out after 5s');
-        return RemoteConfigService.init(); // Retry or just return partially initialized
+          .timeout(const Duration(seconds: 4), onTimeout: () {
+        debugPrint('⚠️ Remote Config timed out after 4s');
+        return null;
       });
     } catch (e) {
       debugPrint('❌ Remote Config Error: $e');

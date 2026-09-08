@@ -6,29 +6,34 @@ class RemoteConfigService {
 
   RemoteConfigService._(this._remoteConfig);
 
-  static Future<RemoteConfigService> init() async {
-    final remoteConfig = FirebaseRemoteConfig.instance;
-
-    await remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(minutes: 1),
-      minimumFetchInterval: const Duration(hours: 1), // Decrease during development if needed
-    ));
-
-    // Set default values
-    await remoteConfig.setDefaults(const {
-      'free_tier_query_limit': 10,
-      'basic_tier_query_limit': 100,
-      'emergency_alert_enabled': false,
-      'emergency_alert_message': '',
-    });
-
+  static Future<RemoteConfigService?> init() async {
     try {
-      await remoteConfig.fetchAndActivate();
-    } catch (e) {
-      debugPrint('Failed to fetch remote config: $e');
-    }
+      final remoteConfig = FirebaseRemoteConfig.instance;
 
-    return RemoteConfigService._(remoteConfig);
+      await remoteConfig.setConfigSettings(RemoteConfigSettings(
+        fetchTimeout: const Duration(minutes: 1),
+        minimumFetchInterval: const Duration(hours: 1), // Decrease during development if needed
+      ));
+
+      // Set default values
+      await remoteConfig.setDefaults(const {
+        'free_tier_query_limit': 10,
+        'basic_tier_query_limit': 100,
+        'emergency_alert_enabled': false,
+        'emergency_alert_message': '',
+      });
+
+      try {
+        await remoteConfig.fetchAndActivate();
+      } catch (e) {
+        debugPrint('Failed to fetch remote config: $e');
+      }
+
+      return RemoteConfigService._(remoteConfig);
+    } catch (e) {
+      debugPrint('⚠️ RemoteConfig not available: $e');
+      return null;
+    }
   }
 
   int get freeTierQueryLimit => _remoteConfig.getInt('free_tier_query_limit');

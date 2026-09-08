@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/biometric_service.dart';
@@ -42,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
         final prefs = await SharedPreferences.getInstance();
         final useBiometric = prefs.getBool('use_biometric') ?? false;
 
-        if (useBiometric) {
+        if (useBiometric && !kIsWeb) {
           final biometricService = BiometricService();
           if (await biometricService.isBiometricAvailable()) {
             final authenticated = await biometricService.authenticate(
