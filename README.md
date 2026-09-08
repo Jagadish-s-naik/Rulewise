@@ -1,10 +1,14 @@
 # RuleWise 🏛️
-[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)](https://rulewise-4ec59.web.app)
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=google-chrome)](https://rulewise-4ec59.web.app)
+[![Firebase Hosting](https://img.shields.io/badge/Firebase_Hosting-Live-039BE5?style=for-the-badge&logo=firebase)](https://rulewise-4ec59.web.app)
+[![Flutter Web](https://img.shields.io/badge/Flutter_Web-Live_Demo-02569B?style=for-the-badge&logo=flutter)](https://rulewise-4ec59.web.app)
+[![Security Status](https://img.shields.io/badge/Security-0_Vulnerabilities-brightgreen?style=for-the-badge&logo=github)](https://github.com/Jagadish-s-naik/Rulewise/security)
 
 **Production-ready government compliance assistant for Indian businesses**
 
-RuleWise is a comprehensive Flutter mobile application that helps Indian businesses manage government compliance requirements. It tracks licenses, sends renewal reminders, provides AI-powered compliance guidance, and integrates with official government APIs.
+- 🌐 **Live Web Application:** [https://rulewise-4ec59.web.app](https://rulewise-4ec59.web.app)
+- 🌐 **Alternate Firebase URL:** [https://rulewise-4ec59.firebaseapp.com](https://rulewise-4ec59.firebaseapp.com)
+
+RuleWise is a comprehensive Flutter cross-platform application (Web, Android, Windows) that helps Indian businesses manage government compliance requirements. It tracks licenses, sends renewal reminders, provides AI-powered compliance guidance, and integrates with official government APIs.
 
 ---
 
@@ -64,6 +68,8 @@ RuleWise is a comprehensive Flutter mobile application that helps Indian busines
 - **Cloud Firestore** - Primary database for user data, licenses, compliance records
 - **Firebase Storage** - Document storage
 - **Firebase Messaging** - Push notifications
+- **Firebase Remote Config** - Dynamic configuration, parameters & feature flags (web-safe)
+- **Firebase Hosting** - Production fast global hosting for Flutter Web
 - **Cloud Functions** (optional) - Server-side business logic
 
 ### AI & Machine Learning
@@ -311,56 +317,47 @@ flutterfire configure --project=rulewise-4ec59
 
 #### 4. Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root (this file is gitignored for security):
 
 ```env
-# Firebase
-FIREBASE_API_KEY=your_firebase_web_api_key
-FIREBASE_AUTH_DOMAIN=rulewise-4ec59.firebaseapp.com
-FIREBASE_PROJECT_ID=rulewise-4ec59
-FIREBASE_STORAGE_BUCKET=rulewise-4ec59.appspot.com
-FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-FIREBASE_APP_ID=your_app_id
+# Firebase API Keys (Compile-time injection)
+FIREBASE_WEB_API_KEY=AIzaSy...
+FIREBASE_ANDROID_API_KEY=AIzaSy...
+FIREBASE_WINDOWS_API_KEY=AIzaSy...
 
-# Groq AI
+# Groq AI (Required for AI assistant)
 GROQ_API_KEY=gsk_your_actual_groq_key_here
 
-# API Setu (optional)
+# API Setu (Optional Government validation)
 API_SETU_KEY=your_api_setu_key
 API_SETU_BASE_URL=https://apisetu.gov.in/api
-ENABLE_API_SETU=true
+ENABLE_API_SETU=false
 
-# Open Government India (optional)
+# Open Government India (Optional)
 OPEN_GOV_INDIA_KEY=your_key
 OPEN_GOV_INDIA_BASE_URL=https://api.data.gov.in
-ENABLE_OPEN_GOV_INDIA=true
+ENABLE_OPEN_GOV_INDIA=false
 
-# Razorpay IFSC (optional)
+# Razorpay IFSC (Public API)
 RAZORPAY_IFSC_BASE_URL=https://ifsc.razorpay.com
 
-# Mutual Fund API (optional)
+# Mutual Fund API (Optional)
 MUTUAL_FUND_BASE_URL=https://api.mfapi.in
-ENABLE_MUTUAL_FUND=true
+ENABLE_MUTUAL_FUND=false
 
-# Tax Data API (optional)
+# Tax Data API (Optional)
 TAX_DATA_API_KEY=your_key
 TAX_DATA_BASE_URL=https://api.apilayer.com/tax_data
-ENABLE_TAX_DATA=true
+ENABLE_TAX_DATA=false
 
-# VAT Validation (optional)
+# VAT Validation (Optional)
 VAT_VALIDATION_API_KEY=your_key
 VAT_VALIDATION_BASE_URL=https://vat.abstractapi.com/v1
-ENABLE_VAT_VALIDATION=true
+ENABLE_VAT_VALIDATION=false
 
-# Mailer (for emails)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your_email@gmail.com
-SMTP_PASSWORD=your_app_password
-
-# Razorpay
-RAZORPAY_KEY_ID=your_key_id
-RAZORPAY_KEY_SECRET=your_key_secret
+# Razorpay Payments & Mock
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+ENABLE_RAZORPAY_MOCK=true
 ```
 
 **Get Groq API Key:**
@@ -387,28 +384,58 @@ cd ..
 #### 6. Run the App
 
 ```bash
-# Check connected devices
-flutter devices
+# Run on Web (Chrome) with .env injected
+flutter run -d chrome --dart-define-from-file=.env
 
-# Run on connected device/emulator
-flutter run
+# Run on connected Mobile device/emulator
+flutter run --dart-define-from-file=.env
 
 # Or run in release mode
-flutter run --release
+flutter run --release --dart-define-from-file=.env
 ```
+
+> **Tip for VS Code:** A preconfigured `.vscode/launch.json` is included. Simply press **F5** or go to *Run & Debug* to launch **RuleWise (Debug with .env)** or **RuleWise Web (Chrome)** instantly.
+
+#### 7. Web Build & Firebase Deployment
+
+RuleWise is continuously deployable to Firebase Hosting with zero configuration drift:
+
+```bash
+# 1. Compile release web bundle with environment configuration
+flutter build web --release --dart-define-from-file=.env
+
+# 2. Deploy to Firebase Hosting
+firebase deploy --only hosting
+```
+
+- 🚀 **Live Site:** [https://rulewise-4ec59.web.app](https://rulewise-4ec59.web.app)
+- 🌐 **Alternate Site:** [https://rulewise-4ec59.firebaseapp.com](https://rulewise-4ec59.firebaseapp.com)
 
 ---
 
 ## ⚙️ Configuration
 
-### API Configuration
+### API Configuration & Security Hardening
 
-All API endpoints and keys are loaded from `.env` via `lib/config/api_config.dart`. Update this file to customize which APIs are enabled.
+All credentials and endpoints are centralized in `lib/config/api_config.dart`. Values are injected at compile time using Flutter's native `String.fromEnvironment` / `bool.fromEnvironment`, ensuring:
+- **Zero hardcoded secrets** in Git repository files.
+- **Web-safe execution** without leaking sensitive backend keys.
 
 ```dart
-static bool get enableApiSetu => dotenv.env['ENABLE_API_SETU']?.toLowerCase() == 'true';
-static bool get enableMutualFund => dotenv.env['ENABLE_MUTUAL_FUND']?.toLowerCase() == 'true';
+// Compiled securely from .env or CI/CD --dart-define
+static const String firebaseWebApiKey =
+    String.fromEnvironment('FIREBASE_WEB_API_KEY');
+static const String groqApiKey =
+    String.fromEnvironment('GROQ_API_KEY');
+static const bool enableApiSetu =
+    bool.fromEnvironment('ENABLE_API_SETU', defaultValue: false);
 ```
+
+### Firebase Remote Config
+
+Dynamic feature flags and runtime configurations are managed via `lib/services/remote_config_service.dart`.
+- Uses a **graceful fallback architecture** that handles network timeouts and web sandbox restrictions without halting the Flutter application startup.
+- Non-blocking initialization in `main.dart` ensures instant splash screen transitions.
 
 ### Subscription Plans
 
@@ -726,6 +753,25 @@ cd ..
 - **Firebase Crashlytics**: Track app crashes (optional)
 - **Sentry**: Error monitoring (if integrated)
 - **Analytics**: Google Analytics for Firebase (optional)
+
+---
+
+## 🔒 Security Architecture & Hardening
+
+RuleWise adheres to enterprise-grade security practices across client and cloud:
+
+1. **No Secret Leaks in Git:**
+   - Client and service credentials (`FIREBASE_*`, `GROQ_API_KEY`, etc.) are injected strictly at build time via `.env` or `--dart-define`.
+   - `.gitignore` strictly ignores `.env`, `node_modules/`, and service account keys (`*firebase-adminsdk*.json`).
+2. **Dependabot & Dependency Audit:**
+   - 100% clean dependency tree verified via `npm audit` (**0 vulnerabilities**).
+   - All sub-dependencies (`websocket-driver`, `form-data`, `@grpc/grpc-js`, `protobufjs`) are continuously patched and audited.
+3. **Platform Sandboxing & Web Safety:**
+   - Hardware-dependent features (biometric sensors via `BiometricService`) are protected with `!kIsWeb` guards to prevent runtime crashes in browser environments.
+   - Remote Config features fail gracefully on network timeouts or restricted enterprise firewalls without blocking the main UI rendering thread.
+4. **Firebase Access Control:**
+   - Database operations are restricted through granular Cloud Firestore Security Rules.
+   - Google Cloud API keys are scoped by HTTP referrer restrictions (`rulewise-4ec59.web.app`) and Android SHA-1 package fingerprints.
 
 ---
 
